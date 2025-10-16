@@ -15,6 +15,7 @@ export class UsersService {
         nombre: true,
         email: true,
         rol: true,
+        isActive: true,
       },
     });
 
@@ -22,4 +23,6 @@ export class UsersService {
 
     return user;
   }
+
+  async validarTrabajador(id: number) {}
 }

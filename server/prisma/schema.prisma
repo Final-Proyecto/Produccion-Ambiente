@@ -21,6 +21,7 @@ model User {
   email      String    @unique
   password   String
   rol        Rol       @default(operario)
+  isActive Boolean
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
@@ -38,8 +39,11 @@ model Lote {
   nombre      String
   superficie  Float
   ubicacion   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   suelos      Suelo[]
   cultivos    Cultivo[]
+  
 }
 
 model Suelo {
@@ -52,6 +56,8 @@ model Suelo {
   fosforo         Float?
   potasio         Float?
   loteId          Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   lote            Lote      @relation(fields: [loteId], references: [id])
   analisis        AnalisisSuelo[]
 }
@@ -62,6 +68,8 @@ model AnalisisSuelo {
   laboratorio   String?
   observaciones String?
   sueloId       Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   suelo         Suelo     @relation(fields: [sueloId], references: [id])
 }
 
@@ -76,6 +84,8 @@ model Cultivo {
   fertilizacion   String?
   controlPlagas   String?
   loteId          Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   lote            Lote      @relation(fields: [loteId], references: [id])
 }
 
@@ -87,6 +97,8 @@ model Corral {
   id          Int        @id @default(autoincrement())
   nombre      String
   capacidad   Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   tipo        TipoCorral
   animales    Animal[]
 }
@@ -106,6 +118,8 @@ model Animal {
   peso           Float?
   corralId       Int
   corral         Corral    @relation(fields: [corralId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 enum Especie {
@@ -122,8 +136,9 @@ model Inventario {
   nombre      String
   categoria   CategoriaInventario
   cantidad    Int
-  unidad_medida String?
+  unidad String?
   almacen String
+  createdAt  DateTime  @default(now())
   updatedAt   DateTime   @updatedAt
 }
 

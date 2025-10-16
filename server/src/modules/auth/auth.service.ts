@@ -32,6 +32,7 @@ export class AuthService {
         nombre: dto.nombre,
         email: dto.email,
         password: hashedPassword,
+        isActive: false,
       },
     });
 
