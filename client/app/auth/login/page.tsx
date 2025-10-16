@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { loginUser } from "@/app/api/login";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,11 +52,23 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular proceso de login
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const result = await loginUser(formData);
 
-    router.push("/home");
-    setIsLoading(false);
+      toast.success("¡Bienvenido de vuelta!", {
+        description: result.message,
+        duration: 2000,
+      });
+      setTimeout(() => {
+        router.push("/auth/home");
+      }, 1500);
+    } catch (error: any) {
+      toast.error("Error al iniciar sesión", {
+        description: error.message || "Credenciales incorrectas.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const containerVariants = {

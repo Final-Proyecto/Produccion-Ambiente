@@ -27,6 +27,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toast } from "sonner";
+import { registerUser } from "../../api/register";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -49,11 +51,21 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular proceso de registro
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const result = await registerUser(formData);
+      toast.success("¡Cuenta Creada!", {
+        description: result.message || "Tu registro fue exitoso.",
+        duration: 3000,
+      });
 
-    router.push("/home");
-    setIsLoading(false);
+      setTimeout(() => router.push("/auth/login"), 2000);
+    } catch (error: any) {
+      toast.error("Error en el Registro", {
+        description: error.message || "No se pudo completar el registro.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const containerVariants = {
