@@ -122,9 +122,12 @@ model Inventario {
   nombre      String
   categoria   CategoriaInventario
   cantidad    Int
-  unidad      String
+  unidad_medida String?
+  almacen String
   updatedAt   DateTime   @updatedAt
 }
+
+
 
 enum CategoriaInventario {
   insumos
