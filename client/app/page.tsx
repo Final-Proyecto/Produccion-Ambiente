@@ -367,7 +367,7 @@ export default function Page() {
               <Button
                 size="lg"
                 variant="outline"
-                className="text-white border-white hover:bg-emerald-800"
+                className="text-emerald-600  hover:bg-emerald-800"
               >
                 Iniciar Sesión
               </Button>
@@ -386,9 +386,6 @@ export default function Page() {
               </div>
               <span className="text-white font-bold">AgroSmart</span>
             </div>
-            <p className="text-sm text-center">
-              © 2024 AgroSmart - Hackathon Ultra 24Hs
-            </p>
             <div className="text-sm">Producción y Ambiente 🌱</div>
           </div>
         </div>
