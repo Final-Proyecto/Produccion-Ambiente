@@ -2,20 +2,35 @@
 
 import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import {
   Sprout,
   Cloud,
   Droplets,
-  TrendingUp,
   MapPin,
   BarChart3,
   Bell,
   ArrowRight,
-  CheckCircle2,
   Leaf,
   Map,
+  Users,
+  Shield,
+  Zap,
 } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -34,14 +49,12 @@ export default function Page() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/satellite-streets-v12",
-      center: [-60.6298, -31.4135], // Formosa, Argentina
+      center: [-60.6298, -31.4135],
       zoom: 12,
     });
 
-    // Agregar controles de navegación
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-    // Agregar algunos marcadores de ejemplo
     const markers = [
       {
         coords: [-60.63, -31.41],
@@ -81,40 +94,74 @@ export default function Page() {
     });
   }, []);
 
+  const testimonials = [
+    {
+      name: "Carlos Rodríguez",
+      role: "Productor Agropecuario",
+      content:
+        "Increíble plataforma. Reduje un 35% el consumo de agua en mis cultivos.",
+    },
+    {
+      name: "María González",
+      role: "Ingeniera Agrónoma",
+      content:
+        "La visualización en tiempo real me permite tomar mejores decisiones.",
+    },
+    {
+      name: "Roberto Silva",
+      role: "Ganadero",
+      content:
+        "El monitoreo GPS del ganado ha sido un cambio radical para mi negocio.",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
-      {/* Navbar */}
-      <nav className="border-b bg-white/80 backdrop-blur-md fixed w-full z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+      {/* Navbar Mejorada */}
+      <nav className="border-b bg-white/90 backdrop-blur-md fixed w-full z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg">
               <Sprout className="text-white" size={24} />
             </div>
-            <span className="text-xl font-bold text-emerald-800">
+            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
               AgroSmart
             </span>
           </div>
-        <Link href="/auth/login" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded ">
-              Iniciar Sesión
+          <div className="flex items-center gap-3">
+            <Link href="/auth/login">
+              <Button
+                variant="outline"
+                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              >
+                Iniciar Sesión
+              </Button>
             </Link>
-            <Link href="/auth/registro" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">
+            <Link href="/auth/registro">
+              <Button className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg">
                 Registrarse
+              </Button>
             </Link>
+          </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto text-center">
-          <Badge className="mb-4 bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
-            <Leaf className="w-3 h-3 mr-1" />
+      {/* Hero Section Mejorada */}
+      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent" />
+        <div className="container mx-auto text-center relative z-10">
+          <Badge className="mb-6 bg-white/80 backdrop-blur-sm text-emerald-800 border-emerald-200 px-4 py-2 rounded-full shadow-lg">
+            <Leaf className="w-4 h-4 mr-2" />
             Gestión Agropecuaria Inteligente
           </Badge>
           <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             Optimiza tu campo con
-            <span className="text-emerald-600"> tecnología</span>
+            <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+              {" "}
+              tecnología
+            </span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
             Monitorea cultivos, ganado y clima en tiempo real. Visualiza tu
             establecimiento en un mapa interactivo y toma decisiones
             inteligentes.
@@ -122,20 +169,59 @@ export default function Page() {
           <div className="flex gap-4 justify-center flex-wrap">
             <Button
               size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8"
+              className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-lg px-8 py-6 rounded-xl shadow-xl"
             >
               Comenzar Ahora
               <ArrowRight className="ml-2" size={20} />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 text-lg px-8 py-6 rounded-xl"
+            >
+              Ver Demo
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Interactive Map Section */}
+      {/* Stats Banner */}
+      <section className="py-8 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-emerald-600">
+                500+
+              </div>
+              <div className="text-sm text-gray-600">Productores</div>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-emerald-600">
+                15k+
+              </div>
+              <div className="text-sm text-gray-600">Hectáreas</div>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-emerald-600">
+                98%
+              </div>
+              <div className="text-sm text-gray-600">Satisfacción</div>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-emerald-600">
+                24/7
+              </div>
+              <div className="text-sm text-gray-600">Soporte</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Map Section Mejorada */}
       <section className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-blue-100 text-blue-800">
+            <Badge className="mb-4 bg-blue-100 text-blue-800 border-blue-200">
               <Map className="w-3 h-3 mr-1" />
               Mapa Interactivo
             </Badge>
@@ -147,93 +233,119 @@ export default function Page() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Map Card */}
-            <Card className="lg:col-span-2 overflow-hidden shadow-2xl border-2 border-emerald-100">
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Map Card Mejorada */}
+            <Card className="lg:col-span-2 overflow-hidden shadow-2xl border-2 border-emerald-100 hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <MapPin size={20} />
                   Vista Satelital del Campo
-                </h3>
-                <p className="text-sm text-emerald-100 mt-1">
+                </CardTitle>
+                <CardDescription className="text-emerald-100">
                   Sistema de geolocalización en tiempo real
-                </p>
-              </div>
-              <div
-                ref={mapContainer}
-                className="w-full h-[400px] md:h-[500px]"
-              />
-              <div className="bg-gray-50 px-6 py-4 border-t flex items-center justify-between">
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <span className="text-sm text-gray-600">Cultivos</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div
+                  ref={mapContainer}
+                  className="w-full h-[400px] md:h-[500px]"
+                />
+                <div className="bg-gray-50 px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex gap-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                      <span className="text-sm text-gray-600">Cultivos</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                      <span className="text-sm text-gray-600">Ganado</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span className="text-sm text-gray-600">Sensores</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-sm text-gray-600">Ganado</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <span className="text-sm text-gray-600">Sensores</span>
-                  </div>
+                  <span className="text-xs text-gray-500">
+                    Actualizado hace 2 min
+                  </span>
                 </div>
-                <span className="text-xs text-gray-500">
-                  Actualizado hace 2 min
-                </span>
-              </div>
+              </CardContent>
             </Card>
 
-            {/* Stats Cards */}
+            {/* Stats Cards Mejoradas */}
             <div className="space-y-6">
-              <Card className="p-6 border-2 border-emerald-100 hover:shadow-lg transition">
-                <MapPin className="text-emerald-600 mb-3" size={28} />
-                <h3 className="text-lg font-semibold mb-2">
-                  Geolocalización GPS
-                </h3>
-                <p className="text-gray-600 text-sm mb-3">
-                  Rastrea la ubicación exacta de tu ganado y equipamiento
-                </p>
-                <div className="text-2xl font-bold text-emerald-600">
-                  12 activos
-                </div>
+              <Card className="p-6 border-2 border-emerald-100 hover:shadow-lg transition-all duration-300 hover:border-emerald-200">
+                <CardHeader className="p-0 mb-4">
+                  <MapPin className="text-emerald-600 mb-2" size={28} />
+                  <CardTitle className="text-lg">Geolocalización GPS</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <p className="text-gray-600 text-sm mb-4">
+                    Rastrea la ubicación exacta de tu ganado y equipamiento
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-emerald-600">
+                      12 activos
+                    </div>
+                    <Progress value={75} className="w-20 bg-emerald-100" />
+                  </div>
+                </CardContent>
               </Card>
 
-              <Card className="p-6 border-2 border-blue-100 hover:shadow-lg transition">
-                <Droplets className="text-blue-600 mb-3" size={28} />
-                <h3 className="text-lg font-semibold mb-2">Sensores IoT</h3>
-                <p className="text-gray-600 text-sm mb-3">
-                  Visualiza datos de humedad, temperatura y más
-                </p>
-                <div className="text-2xl font-bold text-blue-600">
-                  8 sensores
-                </div>
+              <Card className="p-6 border-2 border-blue-100 hover:shadow-lg transition-all duration-300 hover:border-blue-200">
+                <CardHeader className="p-0 mb-4">
+                  <Droplets className="text-blue-600 mb-2" size={28} />
+                  <CardTitle className="text-lg">Sensores IoT</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <p className="text-gray-600 text-sm mb-4">
+                    Visualiza datos de humedad, temperatura y más
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-blue-600">
+                      8 sensores
+                    </div>
+                    <Progress value={60} className="w-20 bg-blue-100" />
+                  </div>
+                </CardContent>
               </Card>
 
-              <Card className="p-6 border-2 border-amber-100 hover:shadow-lg transition">
-                <BarChart3 className="text-amber-600 mb-3" size={28} />
-                <h3 className="text-lg font-semibold mb-2">Estadísticas</h3>
-                <p className="text-gray-600 text-sm mb-3">
-                  Métricas y análisis en tiempo real
-                </p>
-                <div className="text-2xl font-bold text-amber-600">
-                  24/7 live
-                </div>
+              <Card className="p-6 border-2 border-amber-100 hover:shadow-lg transition-all duration-300 hover:border-amber-200">
+                <CardHeader className="p-0 mb-4">
+                  <BarChart3 className="text-amber-600 mb-2" size={28} />
+                  <CardTitle className="text-lg">Estadísticas</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <p className="text-gray-600 text-sm mb-4">
+                    Métricas y análisis en tiempo real
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-amber-600">
+                      24/7 live
+                    </div>
+                    <Progress value={90} className="w-20 bg-amber-100" />
+                  </div>
+                </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-20 px-4 bg-emerald-50">
+      {/* Features Grid Mejorada */}
+      <section className="py-20 px-4 bg-gradient-to-b from-emerald-50 to-white">
         <div className="container mx-auto">
           <div className="text-center mb-16">
+            <Badge className="mb-4 bg-emerald-100 text-emerald-800 border-emerald-200">
+              <Zap className="w-3 h-3 mr-1" />
+              Funcionalidades
+            </Badge>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Funcionalidades principales
+              Todo lo que necesitas en una plataforma
             </h2>
-            <p className="text-xl text-gray-600">
-              Todo lo que necesitas para gestionar tu establecimiento
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Herramientas diseñadas específicamente para el sector agropecuario
+              moderno
             </p>
           </div>
 
@@ -244,24 +356,28 @@ export default function Page() {
                 title: "Monitoreo de Suelo",
                 description: "Sensores de humedad y nutrientes en tiempo real",
                 color: "bg-blue-100 text-blue-600",
+                progress: 85,
               },
               {
                 icon: Cloud,
                 title: "Pronóstico Climático",
                 description: "Predicciones precisas y alertas meteorológicas",
                 color: "bg-sky-100 text-sky-600",
+                progress: 92,
               },
               {
                 icon: Sprout,
                 title: "Gestión de Cultivos",
                 description: "Seguimiento de siembra, crecimiento y cosecha",
                 color: "bg-emerald-100 text-emerald-600",
+                progress: 78,
               },
               {
                 icon: BarChart3,
                 title: "Analytics & Reportes",
                 description: "Visualiza datos y tendencias en tiempo real",
                 color: "bg-purple-100 text-purple-600",
+                progress: 88,
               },
               {
                 icon: Bell,
@@ -269,125 +385,141 @@ export default function Page() {
                 description:
                   "Notificaciones automáticas de condiciones críticas",
                 color: "bg-red-100 text-red-600",
+                progress: 95,
+              },
+              {
+                icon: Shield,
+                title: "Seguridad Integral",
+                description: "Protección de datos y backup automático",
+                color: "bg-green-100 text-green-600",
+                progress: 99,
               },
             ].map((feature, i) => (
               <Card
                 key={i}
-                className="p-6 hover:shadow-xl transition-all duration-300 border-2 hover:border-emerald-200"
+                className="p-6 hover:shadow-xl transition-all duration-300 border-2 hover:border-emerald-200 hover:translate-y-[-4px] group"
               >
-                <div
-                  className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-4`}
-                >
-                  <feature.icon size={24} />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <CardHeader className="p-0 mb-4">
+                  <div
+                    className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+                  >
+                    <feature.icon size={24} />
+                  </div>
+                  <CardTitle className="text-xl mb-2">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <p className="text-gray-600 mb-4">{feature.description}</p>
+                  <div className="flex items-center gap-3">
+                    <Progress
+                      value={feature.progress}
+                      className="flex-1 bg-gray-100"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {feature.progress}%
+                    </span>
+                  </div>
+                </CardContent>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Testimonials Carousel */}
       <section className="py-20 px-4 bg-white">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge className="mb-4 bg-emerald-600 text-white">
-                Impacto Real
-              </Badge>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Resultados que puedes medir
-              </h2>
-              <div className="space-y-4">
-                {[
-                  "Reduce hasta 30% el uso de agua con riego inteligente",
-                  "Aumenta la productividad con decisiones basadas en datos",
-                  "Minimiza el impacto ambiental con gestión optimizada",
-                  "Monitoreo 24/7 desde cualquier dispositivo",
-                  "Alertas automáticas para actuar a tiempo",
-                ].map((benefit, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="text-emerald-600 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-100">
-                <TrendingUp className="text-emerald-600 mb-4" size={32} />
-                <div className="text-3xl font-bold text-gray-900 mb-2">
-                  +25%
-                </div>
-                <div className="text-gray-600">Productividad</div>
-              </Card>
-              <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100">
-                <Droplets className="text-blue-600 mb-4" size={32} />
-                <div className="text-3xl font-bold text-gray-900 mb-2">
-                  -30%
-                </div>
-                <div className="text-gray-600">Uso de agua</div>
-              </Card>
-              <Card className="p-6 bg-gradient-to-br from-amber-50 to-amber-100">
-                <div className="text-3xl font-bold text-gray-900 mb-2">
-                  100%
-                </div>
-                <div className="text-gray-600">Rastreo GPS</div>
-              </Card>
-              <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100">
-                <BarChart3 className="text-purple-600 mb-4" size={32} />
-                <div className="text-3xl font-bold text-gray-900 mb-2">
-                  24/7
-                </div>
-                <div className="text-gray-600">Monitoreo</div>
-              </Card>
-            </div>
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-amber-100 text-amber-800 border-amber-200">
+              <Users className="w-3 h-3 mr-1" />
+              Testimonios
+            </Badge>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Lo que dicen nuestros productores
+            </h2>
           </div>
+
+          <Carousel className="max-w-4xl mx-auto">
+            <CarouselContent>
+              {testimonials.map((testimonial, index) => (
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="p-6 border-2 border-emerald-100 hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-0 text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-bold text-xl">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <p className="text-gray-600 italic mb-4">
+                        &quot;{testimonial.content}&quot;
+                      </p>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {testimonial.name}
+                        </div>
+                        <div className="text-sm text-emerald-600">
+                          {testimonial.role}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-0" />
+            <CarouselNext className="right-0" />
+          </Carousel>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section Mejorada */}
       <section className="py-20 px-4">
         <div className="container mx-auto">
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-12 text-center">
-            <h2 className="text-4xl font-bold mb-4">
-              Comienza a optimizar tu campo hoy
-            </h2>
-            <p className="text-xl mb-8 opacity-90">
-              Registrate gratis y descubre cómo la tecnología puede transformar
-              tu producción
-            </p>
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                className="bg-white text-emerald-700 hover:bg-gray-100"
-              >
-                Crear Cuenta Gratis
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-emerald-600  hover:bg-emerald-800"
-              >
-                Iniciar Sesión
-              </Button>
+          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white p-12 text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            <div className="relative z-10">
+              <h2 className="text-4xl font-bold mb-4">
+                Comienza a optimizar tu campo hoy
+              </h2>
+              <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+                Únete a cientos de productores que ya están transformando su
+                gestión agropecuaria
+              </p>
+              <div className="flex gap-4 justify-center flex-wrap">
+                <Button
+                  size="lg"
+                  className="bg-white text-emerald-700 hover:bg-gray-100 px-8 py-6 rounded-xl font-semibold shadow-lg"
+                >
+                  Crear Cuenta Gratis
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-emerald-700 hover:bg-white/10 px-8 py-6 rounded-xl font-semibold"
+                >
+                  Solicitar Demo
+                </Button>
+              </div>
             </div>
           </Card>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer Mejorado */}
       <footer className="bg-gray-900 text-gray-400 py-12 px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center">
                 <Sprout className="text-white" size={20} />
               </div>
-              <span className="text-white font-bold">AgroSmart</span>
+              <span className="text-white font-bold text-xl">AgroSmart</span>
             </div>
-            <div className="text-sm">Producción y Ambiente 🌱</div>
+            <div className="text-center md:text-right">
+              <div className="text-sm mb-2">Producción y Ambiente 🌱</div>
+              <div className="text-xs text-gray-500">
+                © 2024 AgroSmart. Todos los derechos reservados.
+              </div>
+            </div>
           </div>
         </div>
       </footer>
