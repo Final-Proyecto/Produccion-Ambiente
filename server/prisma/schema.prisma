@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id         Int       @id @default(autoincrement())
+  nombre     String
+  email      String    @unique
+  password   String
+  rol        Rol       @default(operario)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum Rol {
+  admin
+  operario
+}
+
+//
+// 🌾 SECTOR AGRÍCOLA
+//
+model Lote {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  superficie  Float
+  ubicacion   String
+  suelos      Suelo[]
+  cultivos    Cultivo[]
+}
+
+model Suelo {
+  id              Int       @id @default(autoincrement())
+  tipo            String
+  textura         String?
+  ph              Float?
+  materiaOrganica Float?
+  nitrogeno       Float?
+  fosforo         Float?
+  potasio         Float?
+  loteId          Int
+  lote            Lote      @relation(fields: [loteId], references: [id])
+  analisis        AnalisisSuelo[]
+}
+
+model AnalisisSuelo {
+  id            Int       @id @default(autoincrement())
+  fecha         DateTime  @default(now())
+  laboratorio   String?
+  observaciones String?
+  sueloId       Int
+  suelo         Suelo     @relation(fields: [sueloId], references: [id])
+}
+
+model Cultivo {
+  id              Int       @id @default(autoincrement())
+  nombre          String
+  variedad        String?
+  fechaSiembra    DateTime
+  fechaCosecha    DateTime?
+  superficie      Float
+  rendimiento     Float?
+  fertilizacion   String?
+  controlPlagas   String?
+  loteId          Int
+  lote            Lote      @relation(fields: [loteId], references: [id])
+}
+
+
+//
+// 🐄 SECTOR GANADERO
+//
+model Corral {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  capacidad   Int
+  tipo        TipoCorral
+  animales    Animal[]
+}
+
+enum TipoCorral {
+  engorde
+  cria 
+  lechero
+}
+
+model Animal {
+  id             Int       @id @default(autoincrement())
+  identificacion String    @unique
+  especie        Especie
+  raza           String?
+  edad           Int?
+  peso           Float?
+  corralId       Int
+  corral         Corral    @relation(fields: [corralId], references: [id])
+}
+
+enum Especie {
+   bovino
+   ovino
+   porcino
+}
+
+//
+// 📦 INVENTARIO 
+//
+model Inventario {
+  id          Int       @id @default(autoincrement())
+  nombre      String
+  categoria   CategoriaInventario
+  cantidad    Int
+  unidad      String
+  updatedAt   DateTime   @updatedAt
+}
+
+enum CategoriaInventario {
+  insumos
+  maquinas
+  herramientas
+}
+
+
