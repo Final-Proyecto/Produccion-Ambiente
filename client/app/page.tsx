@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import Link from "next/link";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoibWF4Y2VyMjM0IiwiYSI6ImNtZ3RrdndtczAyeHkybHEyb2ZpNnkzdHIifQ.v9EIWXlmgPKKwYsQzqC5Sg";
@@ -93,12 +94,12 @@ export default function Page() {
               AgroSmart
             </span>
           </div>
-          <div className="flex gap-3 items-center">
-            <Button variant="outline">Iniciar Sesión</Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700">
-              Registrarse
-            </Button>
-          </div>
+        <Link href="/auth/login" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded ">
+              Iniciar Sesión
+            </Link>
+            <Link href="/auth/registro" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">
+                Registrarse
+            </Link>
         </div>
       </nav>
 
