@@ -1,13 +1,9 @@
-<<<<<<< HEAD
-import { Injectable, NotFoundException,InternalServerErrorException } from '@nestjs/common';
-=======
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
->>>>>>> acb19c8b92a83c3f2e7dd27c722ece13102cfc31
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { CreateCultivoDto } from './dto/create.cultivo.dto';
 
@@ -21,58 +17,6 @@ export class CultivosService {
 
   async create(dto: CreateCultivoDto) {
     try {
-<<<<<<< HEAD
-      // Paso 1: Obtener los IDs de los cultivos con nombres distintos, limitado a 30
-      const cultivosDistinct = await this.prisma.cultivo.findMany({
-        select: {
-          id: true,
-        },
-        distinct: ['nombre'],
-        take: 30,
-        orderBy: {
-          nombre: 'asc',
-        },
-      });
-
-      const ids = cultivosDistinct.map((c) => c.id);
-
-      // Paso 2: Obtener los cultivos completos con esos IDs, incluyendo costos
-      const cultivos = await this.prisma.cultivo.findMany({
-        where: {
-          id: { in: ids },
-        },
-        include: {
-          cultivoCosto: true,
-        },
-      });
-
-      if (!cultivos || cultivos.length === 0) {
-        throw new NotFoundException('No se encontraron cultivos');
-      }
-
-      const resultado = cultivos.map((cultivo) => {
-        const totalCosto = (cultivo.cultivoCosto || []).reduce(
-          (sum, costo) => sum + Number(costo.cantidadAplicada) * Number(costo.costoPorUnidad),
-          0,
-        );
-
-        return {
-          id: cultivo.id,
-          cultivo: cultivo.nombre,
-          variedad: cultivo.variedad,
-          superficie: cultivo.superficie,
-          rendimiento: cultivo.rendimiento,
-          totalCosto: Number(totalCosto.toFixed(2)),
-          costoPorHectarea:
-            cultivo.superficie > 0
-              ? Number((totalCosto / cultivo.superficie).toFixed(2))
-              : 0,
-          cantidadCostos: cultivo.cultivoCosto?.length || 0,
-        };
-      });
-
-      return resultado;
-=======
       const loteExists = await this.prisma.lote.findUnique({
         where: { id: dto.loteId },
         include: { empresa: true },
@@ -111,7 +55,6 @@ export class CultivosService {
         message: 'Cultivo creado exitosamente',
         data: cultivo,
       };
->>>>>>> acb19c8b92a83c3f2e7dd27c722ece13102cfc31
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -126,51 +69,67 @@ export class CultivosService {
   }
 
   async costosPorCultivo() {
-    const cultivos = await this.prisma.cultivo.findMany({
-      include: {
-        cultivoCosto: true,
-      },
-    });
+    try {
+      // Paso 1: Obtener los IDs de los cultivos con nombres distintos, limitado a 30
+      const cultivosDistinct = await this.prisma.cultivo.findMany({
+        select: {
+          id: true,
+        },
+        distinct: ['nombre'],
+        take: 30,
+        orderBy: {
+          nombre: 'asc',
+        },
+      });
 
-    if (!cultivos || cultivos.length === 0) {
-      throw new NotFoundException('No se encontraron cultivos');
-    }
+      const ids = cultivosDistinct.map((c) => c.id);
 
-    const resultado = cultivos.map((cultivo) => {
-      if (!cultivo.cultivoCosto || !Array.isArray(cultivo.cultivoCosto)) {
-        return {
-          id: cultivo.id,
-          nombre: cultivo.nombre,
-          totalCosto: 0,
-          mensaje: 'No hay datos de costos para este cultivo',
-        };
+      // Paso 2: Obtener los cultivos completos con esos IDs, incluyendo costos
+      const cultivos = await this.prisma.cultivo.findMany({
+        where: {
+          id: { in: ids },
+        },
+        include: {
+          cultivoCosto: true,
+        },
+      });
+
+      if (!cultivos || cultivos.length === 0) {
+        throw new NotFoundException('No se encontraron cultivos');
       }
 
-      const totalCosto = cultivo.cultivoCosto.reduce((sum, costo) => {
-        const cantidad = costo.cantidadAplicada
-          ? parseFloat(costo.cantidadAplicada.toString())
-          : 1;
-        const costoUnitario = costo.costoPorUnidad
-          ? parseFloat(costo.costoPorUnidad.toString())
-          : 0;
+      const resultado = cultivos.map((cultivo) => {
+        const totalCosto = (cultivo.cultivoCosto || []).reduce((sum, costo) => {
+          const cantidad = Number(costo.cantidadAplicada) || 1;
+          const costoUnitario = Number(costo.costoPorUnidad) || 0;
+          return sum + cantidad * costoUnitario;
+        }, 0);
 
-        if (isNaN(cantidad) || isNaN(costoUnitario)) {
-          console.warn(`Datos inválidos en costos para cultivo ${cultivo.id}`);
-          return sum;
-        }
+        return {
+          id: cultivo.id,
+          cultivo: cultivo.nombre,
+          variedad: cultivo.variedad,
+          superficie: cultivo.superficie,
+          rendimiento: cultivo.rendimiento,
+          totalCosto: Number(totalCosto.toFixed(2)),
+          costoPorHectarea:
+            cultivo.superficie > 0
+              ? Number((totalCosto / cultivo.superficie).toFixed(2))
+              : 0,
+          cantidadCostos: cultivo.cultivoCosto?.length || 0,
+        };
+      });
 
-        const subtotal = cantidad * costoUnitario;
-        return sum + subtotal;
-      }, 0);
-
-      return {
-        id: cultivo.id,
-        cultivo: cultivo.nombre,
-        totalCosto: totalCosto,
-      };
-    });
-
-    return resultado;
+      return resultado;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error en costosPorCultivo:', error);
+      throw new InternalServerErrorException(
+        'Error al calcular los costos por cultivo',
+      );
+    }
   }
 
   async gastosPorTipo() {
@@ -191,4 +150,3 @@ export class CultivosService {
     }));
   }
 }
-

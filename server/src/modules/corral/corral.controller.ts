@@ -7,7 +7,7 @@ export class CorralController {
 
   @Get('all')
   async getAllCorralesByEmpresa(empresaId: number) {
-    return await this.corralService.getAll(empresaId);
+    return await this.corralService.getAllByEmpresa(empresaId);
   }
 
   @Get('gastos-por-corral')
