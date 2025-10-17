@@ -15,7 +15,7 @@ export class CreateInventoryDto {
 
   @IsString()
   @IsNotEmpty({ message: 'Ingrese la unidad de medida.' })
-  unidad_medida: string;
+  unidad: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Ingrese el almacen en el que se encuentra.' })

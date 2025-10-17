@@ -36,7 +36,7 @@ export function InventoryForm({ onSuccess }: InventoryFormProps) {
     nombre: "",
     categoria: CategoriaInventario.INSUMOS,
     cantidad: 0,
-    unidad_medida: "",
+    unidad: "",
     almacen: "",
   });
 
@@ -65,7 +65,7 @@ export function InventoryForm({ onSuccess }: InventoryFormProps) {
         nombre: "",
         categoria: CategoriaInventario.INSUMOS,
         cantidad: 0,
-        unidad_medida: "",
+        unidad: "",
         almacen: "",
       });
       if (onSuccess) {
@@ -134,10 +134,10 @@ export function InventoryForm({ onSuccess }: InventoryFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="unidad_medida">Unidad</Label>
+          <Label htmlFor="unidad">Unidad</Label>
           <Input
-            id="unidad_medida"
-            value={formData.unidad_medida}
+            id="unidad"
+            value={formData.unidad}
             onChange={handleInputChange}
             required
           />

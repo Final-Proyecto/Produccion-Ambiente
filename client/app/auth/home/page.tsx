@@ -38,6 +38,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { InventoryForm } from "@/components/forms/InventoryForm";
 import { getInventory, InventoryItem } from "@/app/api/inventory";
 import RealTimeMap from "@/components/mapa/RealTimeMap";
+import ChatPage from "@/components/chat/chat";
 
 export default function HomePage() {
   const router = useRouter();
@@ -461,7 +462,7 @@ export default function HomePage() {
                                   <span>Unidad:</span>
                                 </div>
                                 <span className="font-medium text-gray-700 capitalize">
-                                  {item.unidad_medida}
+                                  {item.unidad}
                                 </span>
                               </div>
 
@@ -627,6 +628,7 @@ export default function HomePage() {
             </Card>
           </motion.div>
         </main>
+        <ChatPage />
       </div>
     );
   }
