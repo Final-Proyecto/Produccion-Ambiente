@@ -7,6 +7,9 @@ import {
   HttpException,
   HttpStatus,
   Patch,
+  Delete,
+  Query,
+  ParseIntPipe,
   UseGuards,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -55,13 +58,30 @@ export class InventoryController {
     }
   }
 
-  @Get('category')
+  @Post('category')
   async findByCategory(@Body() dto: FilterCategoryInvDto) {
     try {
       const res = await this.inventoryService.findByCategory(dto);
       return res;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Delete('delete/:id')
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    try {
+      await this.inventoryService.remove(id);
+      return {
+        message: `El ítem con ID ${id} ha sido eliminado exitosamente.`,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error al eliminar el ítem del inventario.',
+      );
     }
   }
 }
