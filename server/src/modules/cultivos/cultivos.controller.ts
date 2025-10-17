@@ -1,9 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { CultivosService } from './cultivos.service';
-
+import { CreateCultivoDto } from './dto/create.cultivo.dto';
 @Controller('cultivos')
 export class CultivosController {
   constructor(private readonly cultivosService: CultivosService) {}
+
+  @Get('all')
+  async findAll() {
+    return this.cultivosService.findAll();
+  }
 
   @Get('costo-cultivos')
   async cultivosCosto() {
@@ -13,5 +18,10 @@ export class CultivosController {
   @Get('gastos-por-tipo')
   async gastosPorTipo() {
     return this.cultivosService.gastosPorTipo();
+  }
+
+  @Post('create')
+  async create(@Body() dto: CreateCultivoDto) {
+    return this.cultivosService.create(dto);
   }
 }

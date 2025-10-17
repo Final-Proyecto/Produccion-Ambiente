@@ -7,6 +7,7 @@ import { ModelsIaModule } from './modules/models-ia/models-ia.module';
 import { CultivosModule } from './modules/cultivos/cultivos.module';
 import { CorralModule } from './modules/corral/corral.module';
 import { GestionPrecioModule } from './modules/gestion-precio/gestion-precio.module';
+import { AnalisisSueloModule } from './modules/analisis_suelo/analisis_suelo.module';
 @Module({
   imports: [
     AuthModule,
@@ -17,6 +18,7 @@ import { GestionPrecioModule } from './modules/gestion-precio/gestion-precio.mod
     CultivosModule,
     CorralModule,
     GestionPrecioModule,
+    AnalisisSueloModule,
   ],
 })
 export class AppModule {}
