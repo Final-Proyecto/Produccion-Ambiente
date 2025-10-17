@@ -15,6 +15,7 @@ export class UsersService {
         nombre: true,
         email: true,
         rol: true,
+        isActive: true,
       },
     });
 

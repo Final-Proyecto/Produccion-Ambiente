@@ -1,15 +1,10 @@
 import { IsString, IsNumber } from 'class-validator';
 
-export class UpdateInventoryDto {
+export class CreateLoteDto {
   @IsString()
   nombre: string;
-
-  @IsNumber()
-  cantidad: number;
-
   @IsString()
-  unidad_medida: string;
-
+  superficie: number;
   @IsString()
-  almacen: string;
+  ubicacion: string;
 }
