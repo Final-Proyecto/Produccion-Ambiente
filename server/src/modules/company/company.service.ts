@@ -13,6 +13,7 @@ export class CompanyService {
           nombre: companyDto.nombreEmpresa,
           superficie: companyDto.superficie,
           ubicacion: companyDto.ubicacion,
+          
         },
       });
     } catch (error) {

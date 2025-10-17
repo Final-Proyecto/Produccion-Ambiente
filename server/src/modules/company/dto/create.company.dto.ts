@@ -10,4 +10,5 @@ export class CreateCompanyDto {
 
   @IsNotEmpty({ message: 'La superficie es obligatoria.' })
   superficie: string;
+
 }
