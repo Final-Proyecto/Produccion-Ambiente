@@ -43,6 +43,7 @@ import ChatPage from "@/components/chat/chat";
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null); // 👈 Nuevo estado
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
@@ -53,6 +54,10 @@ export default function HomePage() {
       try {
         const profileData = await getProfile();
         setUser(profileData);
+
+        // 👇 Leer el nombre del establecimiento guardado en registro
+        const empresa = localStorage.getItem("nombre_empresa");
+        setNombreEmpresa(empresa);
       } catch {
         toast.error("Acceso denegado", {
           description: "Por favor, inicia sesión para continuar.",
@@ -88,6 +93,8 @@ export default function HomePage() {
   const handleLogout = async () => {
     try {
       await logoutUser();
+      // 👇 Limpiar datos locales al cerrar sesión
+      localStorage.removeItem("nombre_empresa");
       toast.success("¡Sesión cerrada!", {
         description: "Has cerrado sesión exitosamente. ¡Vuelve pronto!",
       });
@@ -278,6 +285,14 @@ export default function HomePage() {
                   <Leaf className="w-3 h-3 mr-1" />
                   Dashboard Principal
                 </Badge>
+
+                {/* 👇 NUEVO: Nombre del establecimiento */}
+                {nombreEmpresa && (
+                  <p className="text-lg font-semibold text-gray-700 mb-1">
+                    {nombreEmpresa}
+                  </p>
+                )}
+
                 <h1 className="text-4xl font-bold text-gray-900">
                   ¡Bienvenido de vuelta,{" "}
                   <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">

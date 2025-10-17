@@ -44,6 +44,7 @@ CREATE TABLE "Lote" (
     "nombre" TEXT NOT NULL,
     "superficie" DOUBLE PRECISION NOT NULL,
     "ubicacion" TEXT NOT NULL,
+    "empresaId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -89,8 +90,6 @@ CREATE TABLE "Cultivo" (
     "fechaCosecha" TIMESTAMP(3),
     "superficie" DOUBLE PRECISION NOT NULL,
     "rendimiento" DOUBLE PRECISION,
-    "fertilizacion" TEXT,
-    "controlPlagas" TEXT,
     "loteId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -99,10 +98,22 @@ CREATE TABLE "Cultivo" (
 );
 
 -- CreateTable
+CREATE TABLE "CultivoCosto" (
+    "id" SERIAL NOT NULL,
+    "cultivoId" INTEGER NOT NULL,
+    "tipoCosto" TEXT NOT NULL,
+    "cantidadAplicada" DOUBLE PRECISION,
+    "costoPorUnidad" DECIMAL(10,2) NOT NULL,
+
+    CONSTRAINT "CultivoCosto_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Corral" (
     "id" SERIAL NOT NULL,
     "nombre" TEXT NOT NULL,
     "capacidad" INTEGER NOT NULL,
+    "empresaId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "tipo" "TipoCorral" NOT NULL,
@@ -133,6 +144,7 @@ CREATE TABLE "Inventario" (
     "cantidad" INTEGER NOT NULL,
     "unidad" TEXT,
     "almacen" TEXT NOT NULL,
+    "empresaId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -161,6 +173,9 @@ CREATE UNIQUE INDEX "Animal_identificacion_key" ON "Animal"("identificacion");
 ALTER TABLE "Empresa" ADD CONSTRAINT "Empresa_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Lote" ADD CONSTRAINT "Lote_empresaId_fkey" FOREIGN KEY ("empresaId") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Suelo" ADD CONSTRAINT "Suelo_loteId_fkey" FOREIGN KEY ("loteId") REFERENCES "Lote"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -170,7 +185,16 @@ ALTER TABLE "AnalisisSuelo" ADD CONSTRAINT "AnalisisSuelo_sueloId_fkey" FOREIGN 
 ALTER TABLE "Cultivo" ADD CONSTRAINT "Cultivo_loteId_fkey" FOREIGN KEY ("loteId") REFERENCES "Lote"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "CultivoCosto" ADD CONSTRAINT "CultivoCosto_cultivoId_fkey" FOREIGN KEY ("cultivoId") REFERENCES "Cultivo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Corral" ADD CONSTRAINT "Corral_empresaId_fkey" FOREIGN KEY ("empresaId") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Animal" ADD CONSTRAINT "Animal_corralId_fkey" FOREIGN KEY ("corralId") REFERENCES "Corral"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Inventario" ADD CONSTRAINT "Inventario_empresaId_fkey" FOREIGN KEY ("empresaId") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

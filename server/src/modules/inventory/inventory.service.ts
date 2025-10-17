@@ -8,7 +8,7 @@ export class InventoryService {
   constructor(private prisma: PrismaService) {}
   async create(inventoryDto: CreateInventoryDto) {
     const inventory = await this.prisma.inventario.create({
-      data: inventoryDto,
+      data: { ...inventoryDto, empresaId: 1 },
     });
     console.log(inventory);
     return inventory;
@@ -22,8 +22,8 @@ export class InventoryService {
     return await this.prisma.inventario.findUnique({ where: { id } });
   }
 
-  update(id: number, updateInventoryDto: UpdateInventoryDto) {
-    const inventory = this.prisma.inventario.update({
+  async update(id: number, updateInventoryDto: UpdateInventoryDto) {
+    const inventory = await this.prisma.inventario.update({
       where: { id },
       data: updateInventoryDto,
     });
