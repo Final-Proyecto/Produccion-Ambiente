@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException,InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 
 @Injectable()
@@ -7,10 +7,27 @@ export class CultivosService {
 
 async costosPorCultivo() {
     try {
-      const cultivos = await this.prisma.cultivoCosto.groupBy({
-        by: ['tipoCosto'],
-        _sum: {
-          costoPorUnidad: true,
+      // Paso 1: Obtener los IDs de los cultivos con nombres distintos, limitado a 30
+      const cultivosDistinct = await this.prisma.cultivo.findMany({
+        select: {
+          id: true,
+        },
+        distinct: ['nombre'],
+        take: 30,
+        orderBy: {
+          nombre: 'asc',
+        },
+      });
+
+      const ids = cultivosDistinct.map((c) => c.id);
+
+      // Paso 2: Obtener los cultivos completos con esos IDs, incluyendo costos
+      const cultivos = await this.prisma.cultivo.findMany({
+        where: {
+          id: { in: ids },
+        },
+        include: {
+          cultivoCosto: true,
         },
       });
 
@@ -19,37 +36,23 @@ async costosPorCultivo() {
       }
 
       const resultado = cultivos.map((cultivo) => {
-        // Verificar que cultivoCosto existe y es un array
-        if (!cultivo || !Array.isArray(cultivo)) {
-          return {
-            id: cultivo,
-            cultivo: cultivo,
-            totalCosto: 0,
-            mensaje: 'No hay datos de costos para este cultivo',
-          };
-        }
-
-        const totalCosto = cultivo.reduce((sum, costo) => {
-          // Validar que los datos existen y son números válidos
-          const cantidad = costo.cantidadAplicada
-            ? parseFloat(costo.cantidadAplicada.toString())
-            : 1;
-          const costoUnitario = costo.costoPorUnidad
-            ? parseFloat(costo.costoPorUnidad.toString())
-            : 0;
-
-          // Validar que son números válidos
-          if (isNaN(cantidad) || isNaN(costoUnitario)) {
-            console.warn(`Datos inválidos en costos para cultivo ${cultivo}`);
-            return sum;
-          }
-
-          const subtotal = cantidad * costoUnitario;
-          return sum + subtotal;
-        }, 0);
+        const totalCosto = (cultivo.cultivoCosto || []).reduce(
+          (sum, costo) => sum + Number(costo.cantidadAplicada) * Number(costo.costoPorUnidad),
+          0,
+        );
 
         return {
-          totalCosto,
+          id: cultivo.id,
+          cultivo: cultivo.nombre,
+          variedad: cultivo.variedad,
+          superficie: cultivo.superficie,
+          rendimiento: cultivo.rendimiento,
+          totalCosto: Number(totalCosto.toFixed(2)),
+          costoPorHectarea:
+            cultivo.superficie > 0
+              ? Number((totalCosto / cultivo.superficie).toFixed(2))
+              : 0,
+          cantidadCostos: cultivo.cultivoCosto?.length || 0,
         };
       });
 
@@ -83,3 +86,4 @@ async costosPorCultivo() {
     }));
   }
 }
+

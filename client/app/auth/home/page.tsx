@@ -1,3 +1,4 @@
+// /app/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -53,6 +54,11 @@ import {
 import RealTimeMap from "@/components/mapa/RealTimeMap";
 import ChatPage from "@/components/chat/chat";
 
+// 👇 Importamos los nuevos componentes y la API
+import CostComparisonBarChart from "../../../components/graficos/barras";
+import ExpenseDonutChart from "../../../components/graficos/donut";
+import { fetchCostosPorCultivo, fetchGastosPorTipo } from "../../api/route";
+
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -71,8 +77,14 @@ export default function HomePage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
   const [categories, setCategories] = useState<string[]>([]);
-  const [itemsToShow, setItemsToShow] = useState(6); // Mostrar solo 6 items inicialmente
+  const [itemsToShow, setItemsToShow] = useState(6);
   const [showAllItems, setShowAllItems] = useState(false);
+
+  // 👇 Estados para los gráficos
+  const [costosData, setCostosData] = useState<{ cultivo: string; totalCosto: number }[]>([]);
+  const [gastosData, setGastosData] = useState<{ tipoCosto: string; totalGasto: number }[]>([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+  const [chartsError, setChartsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -101,7 +113,6 @@ export default function HomePage() {
       setInventory(inventoryData);
       setFilteredInventory(inventoryData);
 
-      // Extraer categorías únicas
       const uniqueCategories = Array.from(
         new Set(inventoryData.map((item) => item.categoria))
       );
@@ -114,13 +125,32 @@ export default function HomePage() {
     }
   };
 
+  // 👇 Nueva función: cargar datos de gráficos
+  const fetchChartsData = async () => {
+    try {
+      setChartsLoading(true);
+      setChartsError(null);
+      const [costos, gastos] = await Promise.all([
+        fetchCostosPorCultivo(),
+        fetchGastosPorTipo(),
+      ]);
+      setCostosData(costos);
+      setGastosData(gastos);
+    } catch (error) {
+      console.error("Error al cargar datos de gráficos:", error);
+      setChartsError("No se pudieron cargar los datos de costos y gastos.");
+    } finally {
+      setChartsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchInventory();
+      fetchChartsData(); // 👈 Cargar gráficos cuando el usuario esté listo
     }
   }, [user]);
 
-  // Actualizar displayedInventory cuando cambia filteredInventory o itemsToShow
   useEffect(() => {
     if (showAllItems) {
       setDisplayedInventory(filteredInventory);
@@ -139,7 +169,6 @@ export default function HomePage() {
       );
       setFilteredInventory(filtered);
     }
-    // Resetear la vista cuando cambia el filtro
     setShowAllItems(false);
     setItemsToShow(6);
   }, [selectedCategory, inventory]);
@@ -158,13 +187,11 @@ export default function HomePage() {
       } catch (error) {
         toast.error("Error al filtrar el inventario");
         console.error("Error filtering inventory:", error);
-        // En caso de error, mostrar el inventario completo
         setFilteredInventory(inventory);
       } finally {
         setIsInventoryLoading(false);
       }
     }
-    // Resetear la vista cuando cambia el filtro
     setShowAllItems(false);
     setItemsToShow(6);
   };
@@ -189,7 +216,7 @@ export default function HomePage() {
       toast.success("Inventario actualizado exitosamente");
       setIsEditDialogOpen(false);
       setEditingItem(null);
-      await fetchInventory(); // Recargar el inventario
+      await fetchInventory();
     } catch (error) {
       toast.error("Error al actualizar el inventario");
       console.error("Error updating inventory:", error);
@@ -222,7 +249,6 @@ export default function HomePage() {
   const handleLogout = async () => {
     try {
       await logoutUser();
-
       toast.success("¡Sesión cerrada!", {
         description: "Has cerrado sesión exitosamente. ¡Vuelve pronto!",
       });
@@ -256,7 +282,6 @@ export default function HomePage() {
       maquinaria: Settings,
       default: Package,
     };
-
     const IconComponent: IconType =
       categoryIcons[categoria.toLowerCase()] || categoryIcons.default;
     return <IconComponent className="h-5 w-5" />;
@@ -270,7 +295,6 @@ export default function HomePage() {
       maquinaria: "bg-purple-100 text-purple-800 border-purple-200",
       default: "bg-gray-100 text-gray-800 border-gray-200",
     };
-
     return colorMap[categoria.toLowerCase()] || colorMap.default;
   };
 
@@ -443,6 +467,74 @@ export default function HomePage() {
                 </DialogContent>
               </Dialog>
             </div>
+          </motion.div>
+
+          {/* 📊 NUEVO: Sección de Gráficos */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12"
+          >
+            {/* Gráfico de Barras */}
+            <Card className="border-2 border-emerald-100 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="text-emerald-600" size={20} />
+                  Comparar costos por tipo de gasto
+                </CardTitle>
+                <CardDescription>
+                  Costos totales por categoría de gasto
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {chartsLoading ? (
+                  <div className="flex justify-center items-center h-[350px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : chartsError ? (
+                  <div className="text-center py-8 text-red-600">
+                    {chartsError}
+                  </div>
+                ) : costosData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay datos de costos disponibles.
+                  </div>
+                ) : (
+                  <CostComparisonBarChart data={costosData} />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Gráfico Donut */}
+            <Card className="border-2 border-emerald-100 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Leaf className="text-emerald-600" size={20} />
+                  Proporción de gastos
+                </CardTitle>
+                <CardDescription>
+                  Distribución de gastos por categoría
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {chartsLoading ? (
+                  <div className="flex justify-center items-center h-[350px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : chartsError ? (
+                  <div className="text-center py-8 text-red-600">
+                    {chartsError}
+                  </div>
+                ) : gastosData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay datos de gastos disponibles.
+                  </div>
+                ) : (
+                  <ExpenseDonutChart data={gastosData} />
+                )}
+              </CardContent>
+            </Card>
           </motion.div>
 
           {/* Stats Grid */}
@@ -717,7 +809,6 @@ export default function HomePage() {
                       ))}
                     </div>
 
-                    {/* Botón para mostrar más/menos items */}
                     {filteredInventory.length > 6 && (
                       <div className="flex justify-center mt-6">
                         <Button
@@ -756,14 +847,12 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <RealTimeMap />
 
-              {/* Recent Activity & Weather */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 }}
                 className="space-y-6"
               >
-                {/* Weather Card */}
                 <Card className="border-2 border-sky-100 bg-gradient-to-br from-sky-50 to-cyan-50 shadow-lg">
                   <CardHeader className="pb-3 bg-sky-100/50">
                     <CardTitle className="flex items-center gap-2 text-sky-900">
@@ -789,7 +878,6 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
 
-                {/* Notifications Card */}
                 <Card className="border-2 border-amber-100 shadow-lg">
                   <CardHeader className="pb-3 bg-amber-50">
                     <CardTitle className="flex items-center gap-2">
@@ -851,7 +939,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Bottom CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -888,7 +975,6 @@ export default function HomePage() {
           </motion.div>
         </main>
 
-        {/* Dialog para editar inventario */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[625px] bg-white">
             {editingItem && (
