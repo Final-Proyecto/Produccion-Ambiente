@@ -203,13 +203,7 @@ model Notification {
   id          Int       @id @default(autoincrement())
   message      String
   userId  Int
-  type TypeRequest
   createdAt  DateTime  @default(now())
   updatedAt   DateTime   @updatedAt
   user User @relation(fields: [userId], references: [id])
-}
-
-enum TypeRequest {
-  register_request
-  acept_register
 }

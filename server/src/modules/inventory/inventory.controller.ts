@@ -19,6 +19,15 @@ import { FilterCategoryInvDto } from './dto/filter.category.inv.dto';
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Get()
+  async findAll() {
+    try {
+      const res = await this.inventoryService.findAll();
+      return res;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
   //Crear
   @Post('create')
   async create(@Body() createInventoryDto: CreateInventoryDto) {
