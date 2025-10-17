@@ -75,57 +75,57 @@ export class CultivosService {
       },
     });
 
-      if (!cultivos || cultivos.length === 0) {
-        throw new NotFoundException('No se encontraron cultivos');
+    if (!cultivos || cultivos.length === 0) {
+      throw new NotFoundException('No se encontraron cultivos');
+    }
+
+    const resultado = cultivos.map((cultivo) => {
+      // Verificar que cultivoCosto existe y es un array
+      if (!cultivo || !Array.isArray(cultivo)) {
+        return {
+          id: cultivo,
+          cultivo: cultivo,
+          totalCosto: 0,
+          mensaje: 'No hay datos de costos para este cultivo',
+        };
       }
 
-      const resultado = cultivos.map((cultivo) => {
-        // Verificar que cultivoCosto existe y es un array
-        if (!cultivo || !Array.isArray(cultivo)) {
-          return {
-            id: cultivo,
-            cultivo: cultivo,
-            totalCosto: 0,
-            mensaje: 'No hay datos de costos para este cultivo',
-          };
+      const totalCosto = cultivo.reduce((sum, costo) => {
+        // Validar que los datos existen y son números válidos
+        const cantidad = costo.cantidadAplicada
+          ? parseFloat(costo.cantidadAplicada.toString())
+          : 1;
+        const costoUnitario = costo.costoPorUnidad
+          ? parseFloat(costo.costoPorUnidad.toString())
+          : 0;
+
+        // Validar que son números válidos
+        if (isNaN(cantidad) || isNaN(costoUnitario)) {
+          console.warn(`Datos inválidos en costos para cultivo ${cultivo}`);
+          return sum;
         }
 
-        const totalCosto = cultivo.reduce((sum, costo) => {
-          // Validar que los datos existen y son números válidos
-          const cantidad = costo.cantidadAplicada
-            ? parseFloat(costo.cantidadAplicada.toString())
-            : 1;
-          const costoUnitario = costo.costoPorUnidad
-            ? parseFloat(costo.costoPorUnidad.toString())
-            : 0;
+        const subtotal = cantidad * costoUnitario;
+        return sum + subtotal;
+      }, 0);
 
-          // Validar que son números válidos
-          if (isNaN(cantidad) || isNaN(costoUnitario)) {
-            console.warn(`Datos inválidos en costos para cultivo ${cultivo}`);
-            return sum;
-          }
+      return {
+        totalCosto,
+      };
+    });
 
-          const subtotal = cantidad * costoUnitario;
-          return sum + subtotal;
-        }, 0);
-
-        return {
-          totalCosto,
-        };
-      });
-
-      return resultado;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      console.error('Error en costosPorCultivo:', error);
-      throw new InternalServerErrorException(
-        'Error al calcular los costos por cultivo',
-      );
-    }
+    return resultado;
   }
-  
+  catch(error) {
+    if (error instanceof NotFoundException) {
+      throw error;
+    }
+    console.error('Error en costosPorCultivo:', error);
+    throw new InternalServerErrorException(
+      'Error al calcular los costos por cultivo',
+    );
+  }
+
   async gastosPorTipo() {
     const gastos = await this.prisma.cultivoCosto.groupBy({
       by: ['tipoCosto'],

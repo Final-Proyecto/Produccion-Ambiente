@@ -13,9 +13,7 @@ export class LoteService {
     return this.prisma.lote.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} lote`;
-  }
+  findOne() {}
 
   update(id: number, updateLoteDto: UpdateLoteDto) {
     const lote = this.prisma.lote.findUnique({ where: { id } });
