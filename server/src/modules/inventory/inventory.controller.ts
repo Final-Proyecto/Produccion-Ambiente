@@ -8,12 +8,13 @@ import {
   HttpStatus,
   Patch,
   UseGuards,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { JwtAuthGuard } from 'src/common/guard/auth.guard';
+import { FilterCategoryInvDto } from './dto/filter.category.inv.dto';
 
-@UseGuards(JwtAuthGuard)
 @Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
@@ -44,15 +45,14 @@ export class InventoryController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  //traer todos
-  @Get()
-  findAll() {
-    return this.inventoryService.findAll();
-  }
 
-  //buscar por id
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.inventoryService.findOne(+id);
+  @Get('category')
+  async findByCategory(@Body() dto: FilterCategoryInvDto) {
+    try {
+      const res = await this.inventoryService.findByCategory(dto);
+      return res;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }

@@ -1,7 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { PrismaService } from 'src/common/prisma/prisma.service';
+import { FilterCategoryInvDto } from './dto/filter.category.inv.dto';
 
 @Injectable()
 export class InventoryService {
@@ -20,6 +25,17 @@ export class InventoryService {
 
   async findOne(id: number) {
     return await this.prisma.inventario.findUnique({ where: { id } });
+  }
+
+  async findByCategory(dto: FilterCategoryInvDto) {
+    const inventory = await this.prisma.inventario.findMany({
+      where: { categoria: dto.categoria },
+    });
+
+    if (!inventory)
+      throw new NotFoundException('No se encontraron inventarios');
+
+    return inventory;
   }
 
   async update(id: number, updateInventoryDto: UpdateInventoryDto) {
