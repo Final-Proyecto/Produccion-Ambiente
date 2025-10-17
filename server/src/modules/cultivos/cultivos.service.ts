@@ -80,18 +80,16 @@ export class CultivosService {
     }
 
     const resultado = cultivos.map((cultivo) => {
-      // Verificar que cultivoCosto existe y es un array
-      if (!cultivo || !Array.isArray(cultivo)) {
+      if (!cultivo.cultivoCosto || !Array.isArray(cultivo.cultivoCosto)) {
         return {
-          id: cultivo,
-          cultivo: cultivo,
+          id: cultivo.id,
+          nombre: cultivo.nombre,
           totalCosto: 0,
           mensaje: 'No hay datos de costos para este cultivo',
         };
       }
 
-      const totalCosto = cultivo.reduce((sum, costo) => {
-        // Validar que los datos existen y son números válidos
+      const totalCosto = cultivo.cultivoCosto.reduce((sum, costo) => {
         const cantidad = costo.cantidadAplicada
           ? parseFloat(costo.cantidadAplicada.toString())
           : 1;
@@ -99,9 +97,8 @@ export class CultivosService {
           ? parseFloat(costo.costoPorUnidad.toString())
           : 0;
 
-        // Validar que son números válidos
         if (isNaN(cantidad) || isNaN(costoUnitario)) {
-          console.warn(`Datos inválidos en costos para cultivo ${cultivo}`);
+          console.warn(`Datos inválidos en costos para cultivo ${cultivo.id}`);
           return sum;
         }
 
@@ -110,20 +107,13 @@ export class CultivosService {
       }, 0);
 
       return {
-        totalCosto,
+        id: cultivo.id,
+        cultivo: cultivo.nombre,
+        totalCosto: totalCosto,
       };
     });
 
     return resultado;
-  }
-  catch(error) {
-    if (error instanceof NotFoundException) {
-      throw error;
-    }
-    console.error('Error en costosPorCultivo:', error);
-    throw new InternalServerErrorException(
-      'Error al calcular los costos por cultivo',
-    );
   }
 
   async gastosPorTipo() {

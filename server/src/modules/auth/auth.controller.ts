@@ -37,7 +37,7 @@ export class AuthController {
       });
       return { message: 'Se ha iniciado sesión exitosamente' };
     } catch (error) {
-      console.log('error en login');
+      console.log('error en login', error);
       throw new HttpException(
         'Se produjo un error al iniciar sesión',
         HttpStatus.INTERNAL_SERVER_ERROR,
