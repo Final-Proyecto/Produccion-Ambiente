@@ -6,7 +6,7 @@ import { PrismaService } from 'src/common/prisma/prisma.service';
 export class LoteService {
   constructor(private prisma: PrismaService) {}
   create(createLDto: CreateLoteDto) {
-    return this.prisma.lote.create({ data: createLDto });
+    return this.prisma.lote.create({ data: { ...createLDto, empresaId: 1 } });
   }
 
   findAll() {

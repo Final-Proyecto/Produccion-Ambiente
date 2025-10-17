@@ -35,6 +35,9 @@ model Empresa {
   superficie  String
   userId Int
   user User @relation(fields: [userId], references: [id])
+  lote Lote[]
+  inventario Inventario[]
+  corral Corral[]
 }
 
 enum Rol {
@@ -50,11 +53,12 @@ model Lote {
   nombre      String
   superficie  Float
   ubicacion   String
+  empresaId Int
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   suelos      Suelo[]
   cultivos    Cultivo[]
-  
+  empresa Empresa @relation(fields: [empresaId], references: [id])
 }
 
 model Suelo {
@@ -83,23 +87,30 @@ model AnalisisSuelo {
   updatedAt  DateTime  @updatedAt
   suelo         Suelo     @relation(fields: [sueloId], references: [id])
 }
-
 model Cultivo {
-  id              Int       @id @default(autoincrement())
+  id              Int              @id @default(autoincrement())
   nombre          String
   variedad        String?
   fechaSiembra    DateTime
   fechaCosecha    DateTime?
-  superficie      Float
-  rendimiento     Float?
-  fertilizacion   String?
-  controlPlagas   String?
+  superficie      Float            // ha
+  rendimiento     Float?           // toneladas producidas
   loteId          Int
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  lote            Lote      @relation(fields: [loteId], references: [id])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  lote            Lote             @relation(fields: [loteId], references: [id])
+  cultivoCosto    CultivoCosto[]
 }
 
+model CultivoCosto {
+  id               Int      @id @default(autoincrement())
+  cultivoId        Int
+  tipoCosto        String   // "Fertilizante", "Riego", etc.
+  cantidadAplicada Float?
+  costoPorUnidad   Decimal  @db.Decimal(10,2)
+  cultivo          Cultivo  @relation(fields: [cultivoId], references: [id])
+}
 
 //
 // 🐄 SECTOR GANADERO
@@ -108,9 +119,11 @@ model Corral {
   id          Int        @id @default(autoincrement())
   nombre      String
   capacidad   Int
+  empresaId Int
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   tipo        TipoCorral
+  empresa Empresa @relation(fields: [empresaId], references: [id])
   animales    Animal[]
 }
 
@@ -148,6 +161,8 @@ model Inventario {
   cantidad    Int
   unidad String?
   almacen String
+  empresaId Int
+  empresa Empresa @relation(fields: [empresaId], references: [id])
   createdAt  DateTime  @default(now())
   updatedAt   DateTime   @updatedAt
 }
