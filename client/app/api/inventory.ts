@@ -8,7 +8,7 @@ export interface CreateInventoryData {
   nombre: string;
   categoria: CategoriaInventario;
   cantidad: number;
-  unidad_medida: string;
+  unidad: string;
   almacen: string;
 }
 
@@ -17,7 +17,7 @@ export interface InventoryItem {
   nombre: string;
   categoria: CategoriaInventario;
   cantidad: number;
-  unidad_medida: string | null;
+  unidad: string | null;
   almacen: string;
   updatedAt: string;
 }

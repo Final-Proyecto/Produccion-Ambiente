@@ -1,3 +1,4 @@
+import { Empresa } from './../../../generated/prisma/index.d';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 @Injectable()
@@ -12,6 +13,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id: id },
       select: {
+        id:true,
         nombre: true,
         email: true,
         rol: true,
@@ -19,8 +21,11 @@ export class UsersService {
       },
     });
 
-    if (!user) return new NotFoundException('El usuario que buscas no existe');
+    
 
+    if (!user) return new NotFoundException('El usuario que buscas no existe');
+ 
+  
     return user;
   }
 }

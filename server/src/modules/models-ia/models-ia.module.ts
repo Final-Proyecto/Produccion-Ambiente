@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ModelsIaService } from './models-ia.service';
-import { ModelsIaController } from './models-ia.controller';
+import { ChatService } from './models-ia.service';
+import { ChatController } from './models-ia.controller';
 
 @Module({
-  controllers: [ModelsIaController],
-  providers: [ModelsIaService],
+  controllers: [ChatController],
+  providers: [ChatService],
 })
 export class ModelsIaModule {}
