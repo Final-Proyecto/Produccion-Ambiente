@@ -31,31 +31,54 @@ import {
   Warehouse,
   Scale,
   Hash,
+  Filter,
+  Edit,
+  Trash2,
+  X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { logoutUser } from "@/app/api/logout";
 import { getProfile, UserProfile } from "@/app/api/users";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { InventoryForm } from "@/components/forms/InventoryForm";
-import { getInventory, InventoryItem } from "@/app/api/inventory";
+import {
+  getInventory,
+  InventoryItem,
+  deleteInventory,
+  getInventoryByCategory,
+  updateInventory,
+  CategoriaInventario,
+} from "@/app/api/inventory";
 import RealTimeMap from "@/components/mapa/RealTimeMap";
 import ChatPage from "@/components/chat/chat";
 
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null); // 👈 Nuevo estado
+  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>(
+    []
+  );
+  const [displayedInventory, setDisplayedInventory] = useState<InventoryItem[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("todas");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [itemsToShow, setItemsToShow] = useState(6); // Mostrar solo 6 items inicialmente
+  const [showAllItems, setShowAllItems] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const profileData = await getProfile();
         setUser(profileData);
-
-        // 👇 Leer el nombre del establecimiento guardado en registro
         const empresa = localStorage.getItem("nombre_empresa");
         setNombreEmpresa(empresa);
       } catch {
@@ -76,6 +99,13 @@ export default function HomePage() {
       setIsInventoryLoading(true);
       const inventoryData = await getInventory();
       setInventory(inventoryData);
+      setFilteredInventory(inventoryData);
+
+      // Extraer categorías únicas
+      const uniqueCategories = Array.from(
+        new Set(inventoryData.map((item) => item.categoria))
+      );
+      setCategories(uniqueCategories);
     } catch (error) {
       toast.error("Error al cargar el inventario");
       console.error("Error fetching inventory:", error);
@@ -90,11 +120,109 @@ export default function HomePage() {
     }
   }, [user]);
 
+  // Actualizar displayedInventory cuando cambia filteredInventory o itemsToShow
+  useEffect(() => {
+    if (showAllItems) {
+      setDisplayedInventory(filteredInventory);
+    } else {
+      setDisplayedInventory(filteredInventory.slice(0, itemsToShow));
+    }
+  }, [filteredInventory, itemsToShow, showAllItems]);
+
+  useEffect(() => {
+    if (selectedCategory === "todas") {
+      setFilteredInventory(inventory);
+    } else {
+      const filtered = inventory.filter(
+        (item) =>
+          item.categoria.toLowerCase() === selectedCategory.toLowerCase()
+      );
+      setFilteredInventory(filtered);
+    }
+    // Resetear la vista cuando cambia el filtro
+    setShowAllItems(false);
+    setItemsToShow(6);
+  }, [selectedCategory, inventory]);
+
+  const handleFilterByCategory = async (category: string) => {
+    setSelectedCategory(category);
+
+    if (category === "todas") {
+      await fetchInventory();
+    } else {
+      try {
+        setIsInventoryLoading(true);
+        const categoriaEnum = category as CategoriaInventario;
+        const inventoryData = await getInventoryByCategory(categoriaEnum);
+        setFilteredInventory(inventoryData);
+      } catch (error) {
+        toast.error("Error al filtrar el inventario");
+        console.error("Error filtering inventory:", error);
+        // En caso de error, mostrar el inventario completo
+        setFilteredInventory(inventory);
+      } finally {
+        setIsInventoryLoading(false);
+      }
+    }
+    // Resetear la vista cuando cambia el filtro
+    setShowAllItems(false);
+    setItemsToShow(6);
+  };
+
+  const handleShowMore = () => {
+    if (showAllItems) {
+      setShowAllItems(false);
+      setItemsToShow(6);
+    } else {
+      setShowAllItems(true);
+    }
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setEditingItem(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateItem = async (updatedItem: InventoryItem) => {
+    try {
+      await updateInventory(updatedItem.id, updatedItem);
+      toast.success("Inventario actualizado exitosamente");
+      setIsEditDialogOpen(false);
+      setEditingItem(null);
+      await fetchInventory(); // Recargar el inventario
+    } catch (error) {
+      toast.error("Error al actualizar el inventario");
+      console.error("Error updating inventory:", error);
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    toast.warning(`¿Eliminar "${itemName}"?`, {
+      description: "Esta acción no se puede deshacer",
+      action: {
+        label: "Eliminar",
+        onClick: async () => {
+          try {
+            await deleteInventory(itemId);
+            toast.success(`"${itemName}" eliminado exitosamente`);
+            await fetchInventory();
+          } catch (error) {
+            toast.error("Error al eliminar el item");
+            console.error("Error deleting inventory:", error);
+          }
+        },
+      },
+      cancel: {
+        label: "Cancelar",
+      },
+      duration: 10000,
+    });
+  };
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-      // 👇 Limpiar datos locales al cerrar sesión
-      localStorage.removeItem("nombre_empresa");
+
       toast.success("¡Sesión cerrada!", {
         description: "Has cerrado sesión exitosamente. ¡Vuelve pronto!",
       });
@@ -146,7 +274,6 @@ export default function HomePage() {
     return colorMap[categoria.toLowerCase()] || colorMap.default;
   };
 
-  // Datos de ejemplo para las tarjetas
   const statsCards = [
     {
       title: "Hectáreas Activas",
@@ -286,7 +413,6 @@ export default function HomePage() {
                   Dashboard Principal
                 </Badge>
 
-                {/* 👇 NUEVO: Nombre del establecimiento */}
                 {nombreEmpresa && (
                   <p className="text-lg font-semibold text-gray-700 mb-1">
                     {nombreEmpresa}
@@ -391,29 +517,98 @@ export default function HomePage() {
                 Gestiona los productos y recursos de tu campo
               </p>
             </div>
+
+            {/* Filtros de Categoría */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Button
+                variant={selectedCategory === "todas" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterByCategory("todas")}
+                className={`${
+                  selectedCategory === "todas"
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "border-emerald-200"
+                }`}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Todas las categorías
+              </Button>
+
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={
+                    selectedCategory === category ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => handleFilterByCategory(category)}
+                  className={`${
+                    selectedCategory === category
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "border-emerald-200"
+                  }`}
+                >
+                  {getCategoryIcon(category)}
+                  {category}
+                </Button>
+              ))}
+
+              {selectedCategory !== "todas" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFilterByCategory("todas")}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="mr-1 h-4 w-4" />
+                  Limpiar filtro
+                </Button>
+              )}
+            </div>
+
             <Card className="border-2 border-emerald-100 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="text-emerald-600" size={20} />
-                  Inventario Actual
-                </CardTitle>
-                <CardDescription>
-                  Lista completa de productos almacenados
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="text-emerald-600" size={20} />
+                      Inventario Actual
+                      {selectedCategory !== "todas" && (
+                        <Badge variant="secondary" className="ml-2">
+                          Filtrado: {selectedCategory}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedCategory === "todas"
+                        ? "Lista completa de productos almacenados"
+                        : `Productos en la categoría ${selectedCategory}`}
+                      {!showAllItems &&
+                        ` (mostrando ${displayedInventory.length} de ${filteredInventory.length})`}
+                    </CardDescription>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {filteredInventory.length} items total
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {isInventoryLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
                   </div>
-                ) : inventory.length === 0 ? (
+                ) : filteredInventory.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       No hay inventario
+                      {selectedCategory !== "todas" &&
+                        ` en la categoría ${selectedCategory}`}
                     </h3>
                     <p className="text-gray-500 mb-4">
-                      Comienza agregando tu primer item al inventario.
+                      {selectedCategory !== "todas"
+                        ? "No se encontraron items en esta categoría."
+                        : "Comienza agregando tu primer item al inventario."}
                     </p>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                       <DialogTrigger asChild>
@@ -428,74 +623,123 @@ export default function HomePage() {
                     </Dialog>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {inventory.map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 * index }}
-                        whileHover={{ y: -2, scale: 1.02 }}
-                      >
-                        <Card className="border border-gray-200 hover:border-emerald-200 transition-all duration-300 group cursor-pointer">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                                  {getCategoryIcon(item.categoria)}
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      {displayedInventory.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.1 * index }}
+                          whileHover={{ y: -2, scale: 1.02 }}
+                        >
+                          <Card className="border border-gray-200 hover:border-emerald-200 transition-all duration-300 group cursor-pointer">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                                    {getCategoryIcon(item.categoria)}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                                      {item.nombre}
+                                    </h3>
+                                    <Badge
+                                      variant="secondary"
+                                      className={`mt-1 ${getCategoryColor(
+                                        item.categoria
+                                      )}`}
+                                    >
+                                      {item.categoria}
+                                    </Badge>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                                    {item.nombre}
-                                  </h3>
-                                  <Badge
-                                    variant="secondary"
-                                    className={`mt-1 ${getCategoryColor(
-                                      item.categoria
-                                    )}`}
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditItem(item);
+                                    }}
+                                    className="h-8 w-8 p-0 hover:bg-blue-100"
                                   >
-                                    {item.categoria}
-                                  </Badge>
+                                    <Edit className="h-4 w-4 text-blue-600" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteItem(item.id, item.nombre);
+                                    }}
+                                    className="h-8 w-8 p-0 hover:bg-red-100"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                  </Button>
                                 </div>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Hash className="h-4 w-4" />
-                                  <span>Cantidad:</span>
-                                </div>
-                                <span className="font-semibold text-gray-900">
-                                  {item.cantidad}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Scale className="h-4 w-4" />
-                                  <span>Unidad:</span>
-                                </div>
-                                <span className="font-medium text-gray-700 capitalize">
-                                  {item.unidad}
-                                </span>
                               </div>
 
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Warehouse className="h-4 w-4" />
-                                  <span>Almacén:</span>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Hash className="h-4 w-4" />
+                                    <span>Cantidad:</span>
+                                  </div>
+                                  <span className="font-semibold text-gray-900">
+                                    {item.cantidad}
+                                  </span>
                                 </div>
-                                <span className="font-medium text-gray-700">
-                                  {item.almacen}
-                                </span>
+
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Scale className="h-4 w-4" />
+                                    <span>Unidad:</span>
+                                  </div>
+                                  <span className="font-medium text-gray-700 capitalize">
+                                    {item.unidad}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Warehouse className="h-4 w-4" />
+                                    <span>Almacén:</span>
+                                  </div>
+                                  <span className="font-medium text-gray-700">
+                                    {item.almacen}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Botón para mostrar más/menos items */}
+                    {filteredInventory.length > 6 && (
+                      <div className="flex justify-center mt-6">
+                        <Button
+                          variant="outline"
+                          onClick={handleShowMore}
+                          className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        >
+                          {showAllItems ? (
+                            <>
+                              <ChevronUp className="mr-2 h-4 w-4" />
+                              Mostrar menos
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="mr-2 h-4 w-4" />
+                              Ver todos los items ({filteredInventory.length})
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -643,6 +887,20 @@ export default function HomePage() {
             </Card>
           </motion.div>
         </main>
+
+        {/* Dialog para editar inventario */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[625px] bg-white">
+            {editingItem && (
+              <InventoryForm
+                item={editingItem}
+                onSuccess={handleUpdateItem}
+                isEdit={true}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
         <ChatPage />
       </div>
     );

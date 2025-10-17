@@ -50,7 +50,17 @@ export class InventoryService {
     return inventory;
   }
 
-  remove(id: number) {
-    //todavia nada
+  async remove(id: number) {
+    const inventoryItem = await this.prisma.inventario.findUnique({
+      where: { id },
+    });
+
+    if (!inventoryItem) {
+      throw new NotFoundException(`El ítem con ID ${id} no fue encontrado.`);
+    }
+
+    return await this.prisma.inventario.delete({
+      where: { id },
+    });
   }
 }
