@@ -5,12 +5,14 @@ import { LoginAuthDto } from './dto/login.auth.dto';
 import { BcryptHelper } from 'src/common/helpers/bcrypt.services';
 import { IPayload } from 'src/common/interface/jwt.interface';
 import { PrismaService } from 'src/common/prisma/prisma.service';
+import { CompanyService } from '../company/company.service';
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: CustomJwtService,
     private bcryptH: BcryptHelper,
     private prisma: PrismaService,
+    private companyService: CompanyService,
   ) {}
 
   async register(dto: RegisterAuthDto) {
@@ -27,7 +29,7 @@ export class AuthService {
 
     const hashedPassword = await this.bcryptH.hashPassword(dto.password);
 
-    await this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         nombre: dto.nombre,
         email: dto.email,
@@ -35,6 +37,14 @@ export class AuthService {
         isActive: false,
       },
     });
+
+    const company = {
+      nombreEmpresa: dto.nombre,
+      ubicacion: dto.ubicacion,
+      superficie: dto.superficie,
+    };
+
+    await this.companyService.create(company, user.id);
 
     return {
       message: 'Usuario creado exitosamente.',

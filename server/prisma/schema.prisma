@@ -14,7 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id         Int       @id @default(autoincrement())
   nombre     String
@@ -24,6 +23,18 @@ model User {
   isActive Boolean
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  notification Notification[]
+  user Empresa[]
+}
+
+
+model Empresa {
+  id         Int       @id @default(autoincrement())
+  nombre String
+  ubicacion String
+  superficie  String
+  userId Int
+  user User @relation(fields: [userId], references: [id])
 }
 
 enum Rol {
@@ -127,7 +138,6 @@ enum Especie {
    ovino
    porcino
 }
-
 //
 // 📦 INVENTARIO 
 //
@@ -151,3 +161,19 @@ enum CategoriaInventario {
 }
 
 
+// NOTIFICACION
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  message      String
+  userId  Int
+  type TypeRequest
+  createdAt  DateTime  @default(now())
+  updatedAt   DateTime   @updatedAt
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum TypeRequest {
+  register_request
+  acept_register
+}

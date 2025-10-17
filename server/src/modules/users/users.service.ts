@@ -23,6 +23,4 @@ export class UsersService {
 
     return user;
   }
-
-  async validarTrabajador(id: number) {}
 }

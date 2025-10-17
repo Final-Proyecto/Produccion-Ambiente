@@ -7,7 +7,6 @@ import {
 import { AppModule } from './app.module';
 import morgan from 'morgan';
 import cookieparser from 'cookie-parser';
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({

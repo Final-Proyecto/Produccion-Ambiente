@@ -4,11 +4,10 @@ import {
   Matches,
   MinLength,
   IsString,
-  MaxLength,
-  IsEnum,
 } from 'class-validator';
+import { CreateCompanyDto } from 'src/modules/company/dto/create.company.dto';
 
-export class RegisterAuthDto {
+export class RegisterAuthDto extends CreateCompanyDto {
   @IsNotEmpty({ message: 'El nombre es obligatorio.' })
   @IsString({ message: 'El nombre debe ser una cadena de texto.' })
   nombre: string;
