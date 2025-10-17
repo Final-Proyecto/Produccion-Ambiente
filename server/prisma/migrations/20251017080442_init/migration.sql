@@ -8,6 +8,9 @@ CREATE TYPE "TipoCorral" AS ENUM ('engorde', 'cria', 'lechero');
 CREATE TYPE "Especie" AS ENUM ('bovino', 'ovino', 'porcino');
 
 -- CreateEnum
+CREATE TYPE "TipoCosto" AS ENUM ('Alimento', 'Vacunacion', 'Desparasitacion', 'Veterinario');
+
+-- CreateEnum
 CREATE TYPE "CategoriaInventario" AS ENUM ('insumos', 'maquinas', 'herramientas');
 
 -- CreateEnum
@@ -137,6 +140,18 @@ CREATE TABLE "Animal" (
 );
 
 -- CreateTable
+CREATE TABLE "AnimalCosto" (
+    "id" SERIAL NOT NULL,
+    "animalId" INTEGER NOT NULL,
+    "tipoCosto" "TipoCosto" NOT NULL,
+    "cantidadAplicada" DOUBLE PRECISION,
+    "costoPorUnidad" DECIMAL(10,2) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AnimalCosto_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Inventario" (
     "id" SERIAL NOT NULL,
     "nombre" TEXT NOT NULL,
@@ -192,6 +207,9 @@ ALTER TABLE "Corral" ADD CONSTRAINT "Corral_empresaId_fkey" FOREIGN KEY ("empres
 
 -- AddForeignKey
 ALTER TABLE "Animal" ADD CONSTRAINT "Animal_corralId_fkey" FOREIGN KEY ("corralId") REFERENCES "Corral"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AnimalCosto" ADD CONSTRAINT "AnimalCosto_animalId_fkey" FOREIGN KEY ("animalId") REFERENCES "Animal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Inventario" ADD CONSTRAINT "Inventario_empresaId_fkey" FOREIGN KEY ("empresaId") REFERENCES "Empresa"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

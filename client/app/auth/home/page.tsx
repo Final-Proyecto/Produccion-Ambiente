@@ -31,31 +31,46 @@ import {
   Warehouse,
   Scale,
   Hash,
+  Filter,
+  Edit,
+  Trash2,
+  X,
 } from "lucide-react";
 import { logoutUser } from "@/app/api/logout";
 import { getProfile, UserProfile } from "@/app/api/users";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { InventoryForm } from "@/components/forms/InventoryForm";
-import { getInventory, InventoryItem } from "@/app/api/inventory";
+import {
+  getInventory,
+  InventoryItem,
+  deleteInventory,
+  getInventoryByCategory,
+  updateInventory,
+} from "@/app/api/inventory";
 import RealTimeMap from "@/components/mapa/RealTimeMap";
 import ChatPage from "@/components/chat/chat";
 
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null); // 👈 Nuevo estado
+  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("todas");
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const profileData = await getProfile();
         setUser(profileData);
-
-        // 👇 Leer el nombre del establecimiento guardado en registro
         const empresa = localStorage.getItem("nombre_empresa");
         setNombreEmpresa(empresa);
       } catch {
@@ -76,6 +91,13 @@ export default function HomePage() {
       setIsInventoryLoading(true);
       const inventoryData = await getInventory();
       setInventory(inventoryData);
+      setFilteredInventory(inventoryData);
+
+      // Extraer categorías únicas
+      const uniqueCategories = Array.from(
+        new Set(inventoryData.map((item) => item.categoria))
+      );
+      setCategories(uniqueCategories);
     } catch (error) {
       toast.error("Error al cargar el inventario");
       console.error("Error fetching inventory:", error);
@@ -90,11 +112,75 @@ export default function HomePage() {
     }
   }, [user]);
 
+  // Filtrar inventario cuando cambia la categoría seleccionada
+  useEffect(() => {
+    if (selectedCategory === "todas") {
+      setFilteredInventory(inventory);
+    } else {
+      const filtered = inventory.filter(
+        (item) =>
+          item.categoria.toLowerCase() === selectedCategory.toLowerCase()
+      );
+      setFilteredInventory(filtered);
+    }
+  }, [selectedCategory, inventory]);
+
+  const handleFilterByCategory = async (categoria: string) => {
+    setSelectedCategory(categoria);
+
+    if (categoria === "todas") {
+      await fetchInventory();
+    } else {
+      try {
+        setIsInventoryLoading(true);
+        const inventoryData = await getInventoryByCategory(categoria);
+        setFilteredInventory(inventoryData);
+      } catch (error) {
+        toast.error("Error al filtrar el inventario");
+        console.error("Error filtering inventory:", error);
+      } finally {
+        setIsInventoryLoading(false);
+      }
+    }
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setEditingItem(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateItem = async (updatedItem: InventoryItem) => {
+    try {
+      await updateInventory(updatedItem.id, updatedItem);
+      toast.success("Inventario actualizado exitosamente");
+      setIsEditDialogOpen(false);
+      setEditingItem(null);
+      await fetchInventory(); // Recargar el inventario
+    } catch (error) {
+      toast.error("Error al actualizar el inventario");
+      console.error("Error updating inventory:", error);
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    if (
+      confirm("¿Estás seguro de que deseas eliminar este item del inventario?")
+    ) {
+      try {
+        await deleteInventory(itemId);
+        toast.success("Item eliminado exitosamente");
+        await fetchInventory(); // Recargar el inventario
+      } catch (error) {
+        toast.error("Error al eliminar el item");
+        console.error("Error deleting inventory:", error);
+      }
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await logoutUser();
-      // 👇 Limpiar datos locales al cerrar sesión
-      localStorage.removeItem("nombre_empresa");
+
       toast.success("¡Sesión cerrada!", {
         description: "Has cerrado sesión exitosamente. ¡Vuelve pronto!",
       });
@@ -391,29 +477,96 @@ export default function HomePage() {
                 Gestiona los productos y recursos de tu campo
               </p>
             </div>
+
+            {/* Filtros de Categoría */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Button
+                variant={selectedCategory === "todas" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilterByCategory("todas")}
+                className={`${
+                  selectedCategory === "todas"
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "border-emerald-200"
+                }`}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Todas las categorías
+              </Button>
+
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={
+                    selectedCategory === category ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => handleFilterByCategory(category)}
+                  className={`${
+                    selectedCategory === category
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "border-emerald-200"
+                  }`}
+                >
+                  {getCategoryIcon(category)}
+                  {category}
+                </Button>
+              ))}
+
+              {selectedCategory !== "todas" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFilterByCategory("todas")}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="mr-1 h-4 w-4" />
+                  Limpiar filtro
+                </Button>
+              )}
+            </div>
+
             <Card className="border-2 border-emerald-100 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="text-emerald-600" size={20} />
-                  Inventario Actual
-                </CardTitle>
-                <CardDescription>
-                  Lista completa de productos almacenados
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="text-emerald-600" size={20} />
+                      Inventario Actual
+                      {selectedCategory !== "todas" && (
+                        <Badge variant="secondary" className="ml-2">
+                          Filtrado: {selectedCategory}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      {selectedCategory === "todas"
+                        ? "Lista completa de productos almacenados"
+                        : `Productos en la categoría ${selectedCategory}`}
+                    </CardDescription>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {filteredInventory.length} items
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {isInventoryLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
                   </div>
-                ) : inventory.length === 0 ? (
+                ) : filteredInventory.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       No hay inventario
+                      {selectedCategory !== "todas" &&
+                        ` en la categoría ${selectedCategory}`}
                     </h3>
                     <p className="text-gray-500 mb-4">
-                      Comienza agregando tu primer item al inventario.
+                      {selectedCategory !== "todas"
+                        ? "No se encontraron items en esta categoría."
+                        : "Comienza agregando tu primer item al inventario."}
                     </p>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                       <DialogTrigger asChild>
@@ -429,7 +582,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {inventory.map((item, index) => (
+                    {filteredInventory.map((item, index) => (
                       <motion.div
                         key={item.id}
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -457,6 +610,30 @@ export default function HomePage() {
                                     {item.categoria}
                                   </Badge>
                                 </div>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditItem(item);
+                                  }}
+                                  className="h-8 w-8 p-0 hover:bg-blue-100"
+                                >
+                                  <Edit className="h-4 w-4 text-blue-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteItem(item.id);
+                                  }}
+                                  className="h-8 w-8 p-0 hover:bg-red-100"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
                               </div>
                             </div>
 
@@ -643,6 +820,20 @@ export default function HomePage() {
             </Card>
           </motion.div>
         </main>
+
+        {/* Dialog para editar inventario */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[625px] bg-white">
+            {editingItem && (
+              <InventoryForm
+                item={editingItem}
+                onSuccess={handleUpdateItem}
+                isEdit={true}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
         <ChatPage />
       </div>
     );
