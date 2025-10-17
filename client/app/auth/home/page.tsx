@@ -18,7 +18,6 @@ import {
   Sprout,
   PlusCircle,
   User,
-  BarChart3,
   MapPin,
   Droplets,
   Cloud,
@@ -38,6 +37,7 @@ import { getProfile, UserProfile } from "@/app/api/users";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { InventoryForm } from "@/components/forms/InventoryForm";
 import { getInventory, InventoryItem } from "@/app/api/inventory";
+import RealTimeMap from "@/components/mapa/RealTimeMap";
 
 export default function HomePage() {
   const router = useRouter();
@@ -126,7 +126,6 @@ export default function HomePage() {
     return <IconComponent className="h-5 w-5" />;
   };
 
-  // Función para obtener color según categoría
   const getCategoryColor = (categoria: string) => {
     const colorMap: { [key: string]: string } = {
       semillas: "bg-green-100 text-green-800 border-green-200",
@@ -176,33 +175,6 @@ export default function HomePage() {
       icon: TrendingUp,
       color: "bg-emerald-500",
       description: "Eficiencia total",
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: "Monitoreo de Cultivos",
-      description: "Revisa el estado de tus plantaciones",
-      icon: Sprout,
-      color: "text-emerald-600 bg-emerald-100",
-    },
-    {
-      title: "Reportes Climáticos",
-      description: "Pronóstico y alertas del tiempo",
-      icon: Cloud,
-      color: "text-sky-600 bg-sky-100",
-    },
-    {
-      title: "Análisis de Suelo",
-      description: "Verifica nutrientes y pH",
-      icon: BarChart3,
-      color: "text-amber-600 bg-amber-100",
-    },
-    {
-      title: "Gestión de Riego",
-      description: "Programa sistemas de irrigación",
-      icon: Droplets,
-      color: "text-blue-600 bg-blue-100",
     },
   ];
 
@@ -393,16 +365,24 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mb-8"
+            className="mb-12"
           >
-            <Card className="border-2 border-emerald-100">
-              <CardHeader>
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                📦 Inventario
+              </h2>
+              <p className="text-gray-600">
+                Gestiona los productos y recursos de tu campo
+              </p>
+            </div>
+            <Card className="border-2 border-emerald-100 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
                 <CardTitle className="flex items-center gap-2">
                   <Package className="text-emerald-600" size={20} />
                   Inventario Actual
                 </CardTitle>
                 <CardDescription>
-                  Gestiona los productos y recursos de tu campo
+                  Lista completa de productos almacenados
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -505,156 +485,110 @@ export default function HomePage() {
             </Card>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
-              className="lg:col-span-2"
-            >
-              <Card className="border-2 border-emerald-100">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="text-emerald-600" size={20} />
-                    Acciones Rápidas
-                  </CardTitle>
-                  <CardDescription>
-                    Gestiona tu campo con un solo clic
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {quickActions.map((action, index) => (
+          {/* Map and Weather Section */}
+          <div className="mb-12">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">🗺️ Monitoreo</h2>
+              <p className="text-gray-600">
+                Visualización en tiempo real y condiciones ambientales
+              </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <RealTimeMap />
+
+              {/* Recent Activity & Weather */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.7 }}
+                className="space-y-6"
+              >
+                {/* Weather Card */}
+                <Card className="border-2 border-sky-100 bg-gradient-to-br from-sky-50 to-cyan-50 shadow-lg">
+                  <CardHeader className="pb-3 bg-sky-100/50">
+                    <CardTitle className="flex items-center gap-2 text-sky-900">
+                      <Cloud size={20} />
+                      Clima Actual
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-sky-600 mb-2">
+                        24°C
+                      </div>
+                      <div className="text-sm text-sky-700 mb-1">
+                        Parcialmente nublado
+                      </div>
+                      <div className="text-xs text-sky-600">
+                        Humedad: 65% • Viento: 15 km/h
+                      </div>
+                      <Badge className="mt-3 bg-sky-100 text-sky-700 border-sky-200">
+                        Condiciones óptimas
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Notifications Card */}
+                <Card className="border-2 border-amber-100 shadow-lg">
+                  <CardHeader className="pb-3 bg-amber-50">
+                    <CardTitle className="flex items-center gap-2">
+                      <Bell className="text-amber-600" size={20} />
+                      Alertas Recientes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {[
+                      {
+                        type: "info",
+                        message: "Riego programado para mañana",
+                        time: "Hace 2h",
+                      },
+                      {
+                        type: "warning",
+                        message: "Revisar niveles de pH en sector B",
+                        time: "Hace 5h",
+                      },
+                      {
+                        type: "success",
+                        message: "Cosecha completada exitosamente",
+                        time: "Ayer",
+                      },
+                    ].map((alert, index) => (
                       <motion.div
-                        key={action.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7 + index * 0.1 }}
-                        whileHover={{ scale: 1.02 }}
+                        key={index}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + index * 0.1 }}
+                        className={`flex items-start gap-3 p-3 rounded-lg border ${
+                          alert.type === "warning"
+                            ? "bg-amber-50 border-amber-200"
+                            : alert.type === "success"
+                            ? "bg-emerald-50 border-emerald-200"
+                            : "bg-blue-50 border-blue-200"
+                        }`}
                       >
-                        <Card className="border border-gray-200 hover:border-emerald-200 cursor-pointer transition-all duration-300 group">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-4">
-                              <div
-                                className={`w-12 h-12 rounded-lg ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
-                              >
-                                <action.icon size={20} />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                                  {action.title}
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                  {action.description}
-                                </p>
-                              </div>
-                              <ChevronRight
-                                className="text-gray-400 group-hover:text-emerald-600 transition-colors"
-                                size={16}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <div
+                          className={`w-2 h-2 rounded-full mt-2 ${
+                            alert.type === "warning"
+                              ? "bg-amber-500"
+                              : alert.type === "success"
+                              ? "bg-emerald-500"
+                              : "bg-blue-500"
+                          }`}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {alert.message}
+                          </p>
+                          <p className="text-xs text-gray-500">{alert.time}</p>
+                        </div>
                       </motion.div>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Recent Activity & Weather */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 }}
-              className="space-y-6"
-            >
-              {/* Weather Card */}
-              <Card className="border-2 border-sky-100 bg-gradient-to-br from-sky-50 to-cyan-50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sky-900">
-                    <Cloud size={20} />
-                    Clima Actual
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-sky-600 mb-2">
-                      24°C
-                    </div>
-                    <div className="text-sm text-sky-700 mb-1">
-                      Parcialmente nublado
-                    </div>
-                    <div className="text-xs text-sky-600">
-                      Humedad: 65% • Viento: 15 km/h
-                    </div>
-                    <Badge className="mt-3 bg-sky-100 text-sky-700 border-sky-200">
-                      Condiciones óptimas
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Notifications Card */}
-              <Card className="border-2 border-amber-100">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="text-amber-600" size={20} />
-                    Alertas Recientes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    {
-                      type: "info",
-                      message: "Riego programado para mañana",
-                      time: "Hace 2h",
-                    },
-                    {
-                      type: "warning",
-                      message: "Revisar niveles de pH en sector B",
-                      time: "Hace 5h",
-                    },
-                    {
-                      type: "success",
-                      message: "Cosecha completada exitosamente",
-                      time: "Ayer",
-                    },
-                  ].map((alert, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      className={`flex items-start gap-3 p-3 rounded-lg border ${
-                        alert.type === "warning"
-                          ? "bg-amber-50 border-amber-200"
-                          : alert.type === "success"
-                          ? "bg-emerald-50 border-emerald-200"
-                          : "bg-blue-50 border-blue-200"
-                      }`}
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full mt-2 ${
-                          alert.type === "warning"
-                            ? "bg-amber-500"
-                            : alert.type === "success"
-                            ? "bg-emerald-500"
-                            : "bg-blue-500"
-                        }`}
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {alert.message}
-                        </p>
-                        <p className="text-xs text-gray-500">{alert.time}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           </div>
 
           {/* Bottom CTA */}
