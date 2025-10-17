@@ -5,11 +5,6 @@ import { CreateCultivoDto } from './dto/create.cultivo.dto';
 export class CultivosController {
   constructor(private readonly cultivosService: CultivosService) {}
 
-  @Get('all')
-  async findAll() {
-    return this.cultivosService.findAll();
-  }
-
   @Get('costo-cultivos')
   async cultivosCosto() {
     return this.cultivosService.costosPorCultivo();
