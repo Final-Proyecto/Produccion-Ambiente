@@ -11,7 +11,7 @@ import { CreateCorralDto } from './dto/create.corral.dto'; // Ajusta la ruta seg
 export class CorralService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAll(empresaId: number) {
+  async getAllByEmpresa(empresaId: number) {
     const res = await this.prisma.corral.findMany({
       where: {
         empresaId,

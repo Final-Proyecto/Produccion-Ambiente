@@ -173,6 +173,7 @@ export default function HomePage() {
     setItemsToShow(6);
   }, [selectedCategory, inventory]);
 
+
   const handleFilterByCategory = async (category: string) => {
     setSelectedCategory(category);
 
