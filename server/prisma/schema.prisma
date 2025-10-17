@@ -144,16 +144,37 @@ model Animal {
   corral         Corral    @relation(fields: [corralId], references: [id])
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  animalCosto AnimalCosto[]
 }
+
+
 
 enum Especie {
    bovino
    ovino
    porcino
 }
+
+model AnimalCosto {
+  id               Int      @id @default(autoincrement())
+  animalId         Int
+  tipoCosto        TipoCosto   
+  cantidadAplicada Float?  // kg de alimento, dosis, horas, etc.
+  costoPorUnidad   Decimal  @db.Decimal(10,2)
+  createdAt        DateTime @default(now())
+
+  animal           Animal   @relation(fields: [animalId], references: [id])
+}
 //
 // 📦 INVENTARIO 
 //
+
+enum TipoCosto {
+  Alimento
+  Vacunacion
+  Desparasitacion
+  Veterinario
+}
 model Inventario {
   id          Int       @id @default(autoincrement())
   nombre      String
