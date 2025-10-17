@@ -31,7 +31,6 @@ export class InventoryController {
       throw new InternalServerErrorException(error.message);
     }
   }
-
   //Crear
   @Post('create')
   async create(@Body() createInventoryDto: CreateInventoryDto) {
@@ -59,7 +58,7 @@ export class InventoryController {
     }
   }
 
-  @Get('category')
+  @Post('category')
   async findByCategory(@Body() dto: FilterCategoryInvDto) {
     try {
       const res = await this.inventoryService.findByCategory(dto);

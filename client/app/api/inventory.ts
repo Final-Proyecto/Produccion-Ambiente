@@ -1,9 +1,11 @@
 export enum CategoriaInventario {
+  SEMILLAS = "semillas",
+  FERTILIZANTES = "fertilizantes",
+  HERRAMIENTAS = "herramientas",
+  MAQUINARIA = "maquinaria",
   INSUMOS = "insumos",
   MAQUINAS = "maquinas",
-  HERRAMIENTAS = "herramientas",
 }
-
 export interface CreateInventoryData {
   nombre: string;
   categoria: CategoriaInventario;
@@ -101,9 +103,8 @@ export async function getInventoryByCategory(
   categoria: CategoriaInventario
 ): Promise<InventoryItem[]> {
   try {
-    // Usamos query params para enviar la categoría en una petición GET
     const res = await fetch(`${API_BASE_URL}/inventory/category`, {
-      method: "GET",
+      method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ categoria }),
@@ -123,7 +124,6 @@ export async function getInventoryByCategory(
     throw error;
   }
 }
-
 export async function deleteInventory(id: number) {
   try {
     const res = await fetch(`${API_BASE_URL}/inventory/delete/${id}`, {

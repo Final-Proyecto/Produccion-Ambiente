@@ -112,7 +112,6 @@ export default function HomePage() {
     }
   }, [user]);
 
-  // Filtrar inventario cuando cambia la categoría seleccionada
   useEffect(() => {
     if (selectedCategory === "todas") {
       setFilteredInventory(inventory);
@@ -125,19 +124,22 @@ export default function HomePage() {
     }
   }, [selectedCategory, inventory]);
 
-  const handleFilterByCategory = async (categoria: string) => {
-    setSelectedCategory(categoria);
+  const handleFilterByCategory = async (category: string) => {
+    setSelectedCategory(category);
 
-    if (categoria === "todas") {
+    if (category === "todas") {
       await fetchInventory();
     } else {
       try {
         setIsInventoryLoading(true);
-        const inventoryData = await getInventoryByCategory(categoria);
+        const categoriaEnum = category as CategoriaInventario;
+        const inventoryData = await getInventoryByCategory(categoriaEnum);
         setFilteredInventory(inventoryData);
       } catch (error) {
         toast.error("Error al filtrar el inventario");
         console.error("Error filtering inventory:", error);
+        // En caso de error, mostrar el inventario completo
+        setFilteredInventory(inventory);
       } finally {
         setIsInventoryLoading(false);
       }
@@ -163,18 +165,48 @@ export default function HomePage() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (
-      confirm("¿Estás seguro de que deseas eliminar este item del inventario?")
-    ) {
-      try {
-        await deleteInventory(itemId);
-        toast.success("Item eliminado exitosamente");
-        await fetchInventory(); // Recargar el inventario
-      } catch (error) {
-        toast.error("Error al eliminar el item");
-        console.error("Error deleting inventory:", error);
-      }
-    }
+    toast.custom((t) => (
+      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 max-w-sm w-full">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <Trash2 className="h-5 w-5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900">¿Eliminar item?</h3>
+            <p className="text-sm text-gray-600">
+              Esta acción no se puede deshacer
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toast.dismiss(t)}
+            className="border-gray-300"
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              try {
+                await deleteInventory(itemId);
+                toast.success("Item eliminado exitosamente");
+                await fetchInventory();
+                toast.dismiss(t);
+              } catch (error) {
+                toast.error("Error al eliminar el item");
+                console.error("Error deleting inventory:", error);
+              }
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
+      </div>
+    ));
   };
 
   const handleLogout = async () => {
@@ -232,7 +264,6 @@ export default function HomePage() {
     return colorMap[categoria.toLowerCase()] || colorMap.default;
   };
 
-  // Datos de ejemplo para las tarjetas
   const statsCards = [
     {
       title: "Hectáreas Activas",
@@ -517,6 +548,7 @@ export default function HomePage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  
                   onClick={() => handleFilterByCategory("todas")}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -628,7 +660,7 @@ export default function HomePage() {
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeleteItem(item.id);
+                                    handleDeleteItem(item.id, item.nombre);
                                   }}
                                   className="h-8 w-8 p-0 hover:bg-red-100"
                                 >
