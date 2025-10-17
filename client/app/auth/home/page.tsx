@@ -1,3 +1,4 @@
+// /app/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -40,22 +41,31 @@ import { getInventory, InventoryItem } from "@/app/api/inventory";
 import RealTimeMap from "@/components/mapa/RealTimeMap";
 import ChatPage from "@/components/chat/chat";
 
+// 👇 Importamos los nuevos componentes y la API
+import CostComparisonBarChart from "../../../components/graficos/barras";
+import ExpenseDonutChart from "../../../components/graficos/donut";
+import { fetchCostosPorCultivo, fetchGastosPorTipo } from "../../api/route";
+
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null); // 👈 Nuevo estado
+  const [nombreEmpresa, setNombreEmpresa] = useState<string | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // 👇 Estados para los gráficos
+  const [costosData, setCostosData] = useState<{ cultivo: string; totalCosto: number }[]>([]);
+  const [gastosData, setGastosData] = useState<{ tipoCosto: string; totalGasto: number }[]>([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+  const [chartsError, setChartsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const profileData = await getProfile();
         setUser(profileData);
-
-        // 👇 Leer el nombre del establecimiento guardado en registro
         const empresa = localStorage.getItem("nombre_empresa");
         setNombreEmpresa(empresa);
       } catch {
@@ -84,16 +94,34 @@ export default function HomePage() {
     }
   };
 
+  // 👇 Nueva función: cargar datos de gráficos
+  const fetchChartsData = async () => {
+    try {
+      setChartsLoading(true);
+      setChartsError(null);
+      const [costos, gastos] = await Promise.all([
+        fetchCostosPorCultivo(),
+        fetchGastosPorTipo(),
+      ]);
+      setCostosData(costos);
+      setGastosData(gastos);
+    } catch (error) {
+      console.error("Error al cargar datos de gráficos:", error);
+      setChartsError("No se pudieron cargar los datos de costos y gastos.");
+    } finally {
+      setChartsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchInventory();
+      fetchChartsData(); // 👈 Cargar gráficos cuando el usuario esté listo
     }
   }, [user]);
-
   const handleLogout = async () => {
     try {
       await logoutUser();
-      // 👇 Limpiar datos locales al cerrar sesión
       localStorage.removeItem("nombre_empresa");
       toast.success("¡Sesión cerrada!", {
         description: "Has cerrado sesión exitosamente. ¡Vuelve pronto!",
@@ -128,7 +156,6 @@ export default function HomePage() {
       maquinaria: Settings,
       default: Package,
     };
-
     const IconComponent: IconType =
       categoryIcons[categoria.toLowerCase()] || categoryIcons.default;
     return <IconComponent className="h-5 w-5" />;
@@ -142,11 +169,9 @@ export default function HomePage() {
       maquinaria: "bg-purple-100 text-purple-800 border-purple-200",
       default: "bg-gray-100 text-gray-800 border-gray-200",
     };
-
     return colorMap[categoria.toLowerCase()] || colorMap.default;
   };
 
-  // Datos de ejemplo para las tarjetas
   const statsCards = [
     {
       title: "Hectáreas Activas",
@@ -286,7 +311,6 @@ export default function HomePage() {
                   Dashboard Principal
                 </Badge>
 
-                {/* 👇 NUEVO: Nombre del establecimiento */}
                 {nombreEmpresa && (
                   <p className="text-lg font-semibold text-gray-700 mb-1">
                     {nombreEmpresa}
@@ -317,6 +341,74 @@ export default function HomePage() {
                 </DialogContent>
               </Dialog>
             </div>
+          </motion.div>
+
+          {/* 📊 NUEVO: Sección de Gráficos */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12"
+          >
+            {/* Gráfico de Barras */}
+            <Card className="border-2 border-emerald-100 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="text-emerald-600" size={20} />
+                  Comparar costos entre cultivos
+                </CardTitle>
+                <CardDescription>
+                  Costos totales por tipo de cultivo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {chartsLoading ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : chartsError ? (
+                  <div className="text-center py-8 text-red-600">
+                    {chartsError}
+                  </div>
+                ) : costosData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay datos de costos disponibles.
+                  </div>
+                ) : (
+                  <CostComparisonBarChart data={costosData} />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Gráfico Donut */}
+            <Card className="border-2 border-emerald-100 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Leaf className="text-emerald-600" size={20} />
+                  Proporción de gastos
+                </CardTitle>
+                <CardDescription>
+                  Distribución de gastos por categoría
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {chartsLoading ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : chartsError ? (
+                  <div className="text-center py-8 text-red-600">
+                    {chartsError}
+                  </div>
+                ) : gastosData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay datos de gastos disponibles.
+                  </div>
+                ) : (
+                  <ExpenseDonutChart data={gastosData} />
+                )}
+              </CardContent>
+            </Card>
           </motion.div>
 
           {/* Stats Grid */}
