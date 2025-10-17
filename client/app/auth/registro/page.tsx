@@ -23,6 +23,9 @@ import {
   ArrowRight,
   CheckCircle2,
   Leaf,
+  Building,
+  MapPin,
+  Ruler,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,17 +33,30 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { registerUser } from "../../api/register";
 
+// ✅ Tipos
+interface RegisterFormData {
+  nombre: string;
+  email: string;
+  password: string;
+  nombreEmpresa: string;
+  superficie: string;
+  ubicacion: string;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterFormData>({
     nombre: "",
     email: "",
     password: "",
+    nombreEmpresa: "",
+    superficie: "",
+    ubicacion: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof RegisterFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -51,17 +67,42 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
 
+    // Validación: todos los campos obligatorios
+    const hasEmptyField = Object.values(formData).some((val) => !val.trim());
+    if (hasEmptyField) {
+      toast.error("Completa todos los campos", {
+        description: "Por favor, ingresa todos los datos solicitados.",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validar que superficie sea un número válido
+    const superficieNum = parseFloat(formData.superficie);
+    if (isNaN(superficieNum) || superficieNum <= 0) {
+      toast.error("Superficie inválida", {
+        description: "Ingresa un número válido mayor a 0 para la superficie.",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const result = await registerUser(formData);
       toast.success("¡Cuenta Creada!", {
-        description: result.message || "Tu registro fue exitoso.",
+        description: result?.message || "Tu registro fue exitoso.",
         duration: 3000,
       });
-
       setTimeout(() => router.push("/auth/login"), 2000);
-    } catch (error: any) {
+    } catch (error) {
+      let errorMessage = "No se pudo completar el registro.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
       toast.error("Error en el Registro", {
-        description: error.message || "No se pudo completar el registro.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -104,7 +145,7 @@ export default function RegisterPage() {
 
       {/* Floating Elements */}
       <motion.div
-        className="absolute top-1/4 left-5% w-3 h-3 bg-emerald-400 rounded-full opacity-20 md:opacity-30"
+        className="absolute top-1/4 left-[5%] w-3 h-3 bg-emerald-400 rounded-full opacity-20 md:opacity-30"
         animate={{
           y: [0, -20, 0],
           scale: [1, 1.2, 1],
@@ -116,7 +157,7 @@ export default function RegisterPage() {
         }}
       />
       <motion.div
-        className="absolute top-1/3 right-10% w-4 h-4 bg-green-400 rounded-full opacity-25 md:opacity-35"
+        className="absolute top-1/3 right-[10%] w-4 h-4 bg-green-400 rounded-full opacity-25 md:opacity-35"
         animate={{
           y: [0, 30, 0],
           scale: [1, 1.1, 1],
@@ -156,7 +197,7 @@ export default function RegisterPage() {
       </nav>
 
       <div className="container mx-auto px-4 pt-28 pb-16">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-stretch max-w-6xl mx-auto">
           {/* Left Column - Form */}
           <motion.div
             initial="hidden"
@@ -164,7 +205,7 @@ export default function RegisterPage() {
             variants={containerVariants}
             className="flex justify-center w-full"
           >
-            <Card className="w-full max-w-md border-2 border-emerald-100 shadow-2xl bg-white/80 backdrop-blur-sm">
+            <Card className="w-full max-w-md border-2 border-emerald-100 shadow-2xl bg-white/80 backdrop-blur-sm flex flex-col">
               <CardHeader className="text-center space-y-4 pb-6">
                 <motion.div variants={itemVariants}>
                   <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -189,7 +230,7 @@ export default function RegisterPage() {
                 </motion.div>
               </CardHeader>
 
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-5 flex-grow">
                 <form onSubmit={handleRegister} className="space-y-4">
                   {/* Nombre */}
                   <motion.div variants={itemVariants} className="space-y-2">
@@ -273,6 +314,76 @@ export default function RegisterPage() {
                     </div>
                   </motion.div>
 
+                  {/* Nombre de la Empresa */}
+                  <motion.div variants={itemVariants} className="space-y-2">
+                    <Label
+                      htmlFor="nombreEmpresa"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Nombre de tu Establecimiento
+                    </Label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="nombreEmpresa"
+                        placeholder="Estancia Los Pinares"
+                        className="pl-10 border-emerald-200 focus:border-emerald-500 h-11"
+                        value={formData.nombreEmpresa}
+                        onChange={(e) =>
+                          handleInputChange("nombreEmpresa", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Superficie */}
+                  <motion.div variants={itemVariants} className="space-y-2">
+                    <Label
+                      htmlFor="superficie"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Superficie (Hectáreas)
+                    </Label>
+                    <div className="relative">
+                      <Ruler className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="superficie"
+                        type="text"
+                        placeholder="150.5"
+                        className="pl-10 border-emerald-200 focus:border-emerald-500 h-11"
+                        value={formData.superficie}
+                        onChange={(e) =>
+                          handleInputChange("superficie", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Ubicación */}
+                  <motion.div variants={itemVariants} className="space-y-2">
+                    <Label
+                      htmlFor="ubicacion"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Ubicación
+                    </Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="ubicacion"
+                        placeholder="Córdoba, Argentina"
+                        className="pl-10 border-emerald-200 focus:border-emerald-500 h-11"
+                        value={formData.ubicacion}
+                        onChange={(e) =>
+                          handleInputChange("ubicacion", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
+                  </motion.div>
+
                   {/* Botón de Registro */}
                   <motion.div variants={itemVariants} className="pt-2">
                     <Button
@@ -301,7 +412,6 @@ export default function RegisterPage() {
                   </motion.div>
                 </form>
 
-                {/* Link a Login */}
                 <motion.div
                   variants={itemVariants}
                   className="text-center pt-4"
@@ -320,12 +430,12 @@ export default function RegisterPage() {
             </Card>
           </motion.div>
 
-          {/* Right Column - Image and Benefits */}
+          {/* Right Column - Image and Benefits (AHORA CON LA MISMA ALTURA QUE EL FORMULARIO Y SIN CENTRAR) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:flex flex-col items-center justify-center space-y-8"
+            className="hidden lg:flex flex-col justify-start space-y-8"
           >
             {/* Imagen del árbol 3D */}
             <motion.div
@@ -335,26 +445,17 @@ export default function RegisterPage() {
               className="relative"
             >
               <div className="relative w-80 h-80">
-                {/* Placeholder para tu imagen árbol.png - reemplaza con tu imagen */}
-                <div className="w-full h-full bg-gradient-to-br from-emerald-200 to-green-300 rounded-3xl flex items-center justify-center shadow-2xl">
-                  <div className="text-center text-emerald-700">
-                    <Sprout size={64} className="mx-auto mb-4" />
-                    <Image
-                      src="/arbol.png"
-                      alt="Árbol 3D AgroSmart"
-                      width={320}
-                      height={320}
-                      className="w-full h-full object-contain rounded-3xl shadow-2xl"
-                      priority
-                    />
-                  </div>
-                </div>
-
-                {/* Efecto de brillo */}
+                <Image
+                  src="/arbol.png"
+                  alt="Árbol 3D AgroSmart"
+                  width={320}
+                  height={320}
+                  className="w-full h-full object-contain rounded-3xl shadow-2xl"
+                  priority
+                />
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-3xl"></div>
               </div>
 
-              {/* Elementos decorativos alrededor de la imagen */}
               <motion.div
                 className="absolute -top-4 -right-4 w-8 h-8 bg-yellow-400 rounded-full opacity-60"
                 animate={{
@@ -433,13 +534,12 @@ export default function RegisterPage() {
             </motion.div>
           </motion.div>
 
-          {/* Mobile Benefits - Solo se muestra en móvil */}
+          {/* Mobile Benefits */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="lg:hidden space-y-6 mt-8"
           >
-            {/* Benefits List Mobile */}
             <Card className="bg-white/70 backdrop-blur-sm border-emerald-100">
               <CardContent className="pt-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4 text-center">
