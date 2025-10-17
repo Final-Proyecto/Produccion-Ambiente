@@ -81,8 +81,12 @@ export default function HomePage() {
   const [showAllItems, setShowAllItems] = useState(false);
 
   // 👇 Estados para los gráficos
-  const [costosData, setCostosData] = useState<{ cultivo: string; totalCosto: number }[]>([]);
-  const [gastosData, setGastosData] = useState<{ tipoCosto: string; totalGasto: number }[]>([]);
+  const [costosData, setCostosData] = useState<
+    { cultivo: string; totalCosto: number }[]
+  >([]);
+  const [gastosData, setGastosData] = useState<
+    { tipoCosto: string; totalGasto: number }[]
+  >([]);
   const [chartsLoading, setChartsLoading] = useState(true);
   const [chartsError, setChartsError] = useState<string | null>(null);
 
@@ -173,26 +177,8 @@ export default function HomePage() {
     setItemsToShow(6);
   }, [selectedCategory, inventory]);
 
-
-  const handleFilterByCategory = async (category: string) => {
+  const handleFilterByCategory = (category: string) => {
     setSelectedCategory(category);
-
-    if (category === "todas") {
-      await fetchInventory();
-    } else {
-      try {
-        setIsInventoryLoading(true);
-        const categoriaEnum = category as CategoriaInventario;
-        const inventoryData = await getInventoryByCategory(categoriaEnum);
-        setFilteredInventory(inventoryData);
-      } catch (error) {
-        toast.error("Error al filtrar el inventario");
-        console.error("Error filtering inventory:", error);
-        setFilteredInventory(inventory);
-      } finally {
-        setIsInventoryLoading(false);
-      }
-    }
     setShowAllItems(false);
     setItemsToShow(6);
   };
