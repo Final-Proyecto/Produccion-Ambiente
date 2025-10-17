@@ -71,7 +71,7 @@ export default function HomePage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("todas");
   const [categories, setCategories] = useState<string[]>([]);
-  const [itemsToShow, setItemsToShow] = useState(6); // Mostrar solo 6 items inicialmente
+  const [itemsToShow, setItemsToShow] = useState(6);
   const [showAllItems, setShowAllItems] = useState(false);
 
   useEffect(() => {
@@ -143,6 +143,7 @@ export default function HomePage() {
     setShowAllItems(false);
     setItemsToShow(6);
   }, [selectedCategory, inventory]);
+
 
   const handleFilterByCategory = async (category: string) => {
     setSelectedCategory(category);
