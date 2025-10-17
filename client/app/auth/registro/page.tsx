@@ -89,6 +89,10 @@ export default function RegisterPage() {
 
     try {
       const result = await registerUser(formData);
+
+      // ✅ Guardamos el nombre del establecimiento en localStorage
+      localStorage.setItem("nombre_empresa", formData.nombreEmpresa);
+
       toast.success("¡Cuenta Creada!", {
         description: result?.message || "Tu registro fue exitoso.",
         duration: 3000,
@@ -430,14 +434,13 @@ export default function RegisterPage() {
             </Card>
           </motion.div>
 
-          {/* Right Column - Image and Benefits (AHORA CON LA MISMA ALTURA QUE EL FORMULARIO Y SIN CENTRAR) */}
+          {/* Right Column - Image and Benefits */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:flex flex-col justify-start space-y-8"
+            className="hidden lg:flex flex-col justify-between space-y-8 flex-1"
           >
-            {/* Imagen del árbol 3D */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -483,17 +486,16 @@ export default function RegisterPage() {
               />
             </motion.div>
 
-            {/* Benefits List */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 shadow-lg w-full max-w-md"
+              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 shadow-lg w-full max-w-md flex-grow flex flex-col"
             >
               <h3 className="font-bold text-lg text-gray-900 mb-4 text-center">
                 Beneficios de unirte
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-3 flex-grow">
                 {benefits.map((benefit, index) => (
                   <motion.div
                     key={benefit}
@@ -512,7 +514,6 @@ export default function RegisterPage() {
               </div>
             </motion.div>
 
-            {/* Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
